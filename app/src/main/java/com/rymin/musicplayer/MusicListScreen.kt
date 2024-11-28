@@ -2,28 +2,31 @@ package com.rymin.musicplayer
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rymin.musicplayer.data.Music
+
+@Composable
+fun MusicListScreen(
+    onMusicSelected: (Music) -> Unit // 음악 선택 시 동작 (상세 화면 이동)
+) {
+    Root()
+
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MusicListScreen(
-    viewModel: MusicListViewModel, // ViewModel 연결
-    onMusicSelected: (Music) -> Unit // 음악 선택 시 동작 (상세 화면 이동)
+private fun Root(
+//    viewModel: MusicListViewModel = viewModel(),
 ) {
-    val isLoading by viewModel.isLoading.collectAsState()
-//val isLoading = false
+//    val isLoading by viewModel.isLoading.collectAsState()
+    val isLoading = false
     Scaffold(
         topBar = {
             TopAppBar(
@@ -43,7 +46,6 @@ fun MusicListScreen(
         }
     }
 }
-
 @Composable
 fun MusicListItem(music: Music, onMusicClick: (Music) -> Unit) {
     Row(

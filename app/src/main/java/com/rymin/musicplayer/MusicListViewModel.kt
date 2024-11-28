@@ -25,7 +25,7 @@ class MusicListViewModel(private val musicRepository: MusicRepository) : ViewMod
      fun loadMusicList() {
         viewModelScope.launch {
             _isLoading.value = true
-            _musicList.value = musicRepository.getMusicList()
+//            _musicList.value = musicRepository.getMusicList()
             _isLoading.value = false
         }
     }

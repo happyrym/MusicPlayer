@@ -1,6 +1,7 @@
 package com.rymin.musicplayer
 
 import android.app.Application
+import android.util.Log
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -12,10 +13,11 @@ class MusicPlayerApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d("rymins"," start")
         startKoin {
             androidLogger(Level.ERROR)
             androidContext(this@MusicPlayerApplication)
-            modules(modules)
+//            modules(modules)
         }
         // Timber 초기화
         if (BuildConfig.DEBUG) {

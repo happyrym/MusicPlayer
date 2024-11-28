@@ -7,10 +7,8 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 object DomainModules {
-    val musicDataSourceModule: Module = module {
-        single { MusicDataSource(get()) }
-    }
     val musicRepositoryModule: Module = module {
+        single { MusicDataSource(get()) }
         single<MusicRepository> { MusicRepositoryImpl(get()) }
     }
 }
