@@ -19,11 +19,11 @@ import com.rymin.musicplayer.data.Music
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicListScreen(
-//    viewModel: MusicListViewModel, // ViewModel 연결
+    viewModel: MusicListViewModel, // ViewModel 연결
     onMusicSelected: (Music) -> Unit // 음악 선택 시 동작 (상세 화면 이동)
 ) {
-//    val isLoading by viewModel.isLoading.collectAsState()
-val isLoading = false
+    val isLoading by viewModel.isLoading.collectAsState()
+//val isLoading = false
     Scaffold(
         topBar = {
             TopAppBar(

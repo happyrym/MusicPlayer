@@ -12,8 +12,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-//            MusicListScreen(viewModel = viewModel, onMusicSelected = { music ->})
-            MusicListScreen(onMusicSelected = { music ->})
+            MusicListScreen(viewModel = viewModel, onMusicSelected = { music ->})
+//            MusicListScreen(onMusicSelected = { music ->})
         }
     }
 }
