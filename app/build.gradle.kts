@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("kotlin-kapt") // Room 및 Glide용
 }
 
 android {
@@ -31,11 +30,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
@@ -74,10 +73,6 @@ dependencies {
     // Koin for Di
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
-
-    // Room for data persistence
-    implementation(libs.room.runtime)
-    kapt(libs.androidx.room.compiler)
 
     // ExoPlayer for music play
     implementation(libs.exoplayer)
