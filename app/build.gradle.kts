@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("kotlin-kapt") // Room 및 Glide용
 }
 
 android {
@@ -38,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -50,7 +52,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -66,4 +67,33 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Log library
+    implementation(libs.timber)
+
+    // Koin for Di
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
+    // Room for data persistence
+    implementation(libs.room.runtime)
+    kapt(libs.androidx.room.compiler)
+
+    // ExoPlayer for music play
+    implementation(libs.exoplayer)
+
+    // Image loading
+    implementation(libs.coil.compose) // Coil for Compose
+
+    // Coroutine and Flow
+    implementation(libs.kotlinx.coroutines.android)
+
+    // Permissions (Compose-friendly)
+    implementation(libs.accompanist.permissions)
+
+    // DataStore for preferences
+    implementation(libs.androidx.datastore.preferences)
+
+    // Notifications and WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
 }
