@@ -17,7 +17,7 @@ class MusicPlayerApplication : Application() {
         startKoin {
             androidLogger(Level.ERROR)
             androidContext(this@MusicPlayerApplication)
-//            modules(modules)
+            modules(modules)
         }
         // Timber 초기화
         if (BuildConfig.DEBUG) {

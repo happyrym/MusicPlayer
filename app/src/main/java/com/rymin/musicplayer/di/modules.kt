@@ -1,10 +1,11 @@
 package com.rymin.musicplayer.di
 
 import com.rymin.musicplayer.MusicListViewModel
+import com.rymin.musicplayer.di.DomainModules.musicRepositoryModule
 import org.koin.core.module.Module
 
 private val domainModules: List<Module> = listOf(
-    DomainModules.musicRepositoryModule,
+    musicRepositoryModule
 )
 
 private val appModules: List<Module> = listOf(
