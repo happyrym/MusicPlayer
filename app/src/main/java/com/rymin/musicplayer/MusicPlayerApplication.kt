@@ -13,7 +13,6 @@ class MusicPlayerApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("rymins"," start")
         startKoin {
             androidLogger(Level.ERROR)
             androidContext(this@MusicPlayerApplication)

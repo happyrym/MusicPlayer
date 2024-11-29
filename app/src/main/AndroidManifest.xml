@@ -4,15 +4,17 @@
     <!-- 외부 저장소에서 음악 파일 읽기 -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" /> <!-- Android 13(API 33) 이상에서 오디오 파일 읽기 -->
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" /> <!-- 포그라운드 서비스 실행 -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- 화면이 꺼져도 CPU 유지 -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" /> <!-- 외부 저장소에 파일 쓰기(Android 10 이하에서만 필요) -->
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" /> <!-- Android 10(API 29) 이상 -->
-    <!-- 미디어 파일의 위치 데이터 접근 -->
+        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+
 
     <application
         android:name=".MusicPlayerApplication"
@@ -25,6 +27,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicPlayer"
         tools:targetApi="31" >
+        <service
+            android:name=".service.MusicPlayerService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

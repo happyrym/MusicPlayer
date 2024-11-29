@@ -1,19 +1,20 @@
 package com.rymin.musicplayer.viewmodel
 
-import android.content.Context
-import android.media.MediaPlayer
-import android.net.Uri
+import android.app.Application
 import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rymin.musicplayer.data.Music
+import com.rymin.musicplayer.service.MusicPlayerService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MusicListViewModel(private val context: Context) : ViewModel() {
+class MusicListViewModel(application: Application) : ViewModel() {
+    private val appContext = application.applicationContext
 
     private val _musicList = MutableStateFlow<List<Music>>(emptyList())
     val musicList: StateFlow<List<Music>> get() = _musicList
@@ -30,10 +31,23 @@ class MusicListViewModel(private val context: Context) : ViewModel() {
     private val _duration = MutableStateFlow(0f)
     val duration: StateFlow<Float> get() = _duration
 
-    private var mediaPlayer: MediaPlayer? = null
-
     init {
         fetchMusicList()
+    }
+
+    private var musicPlayerService: MusicPlayerService? = null
+
+    fun bindService(service: MusicPlayerService) {
+        this.musicPlayerService = service
+        viewModelScope.launch {
+            service.isPlaying.collect { isPlaying ->
+                _isPlaying.value = isPlaying
+            }
+        }
+    }
+
+    fun unbindService() {
+        musicPlayerService = null
     }
 
     private fun fetchMusicList() {
@@ -53,7 +67,7 @@ class MusicListViewModel(private val context: Context) : ViewModel() {
                 MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.DATA
             )
-            val cursor = context.contentResolver.query(
+            val cursor = appContext.contentResolver.query(
                 musicUri,
                 projection,
                 "${MediaStore.Audio.Media.IS_MUSIC} != 0",
@@ -85,30 +99,36 @@ class MusicListViewModel(private val context: Context) : ViewModel() {
     }
 
     fun playMusic(music: Music) {
-        mediaPlayer?.release()
-        mediaPlayer = MediaPlayer().apply {
-            setDataSource(context, Uri.parse(music.filePath))
-            prepare()
-            start()
-        }
+        musicPlayerService?.playMusic(music)
+
         _currentMusic.value = music
-        _duration.value = mediaPlayer?.duration?.toFloat() ?: 0f
+        _duration.value = musicPlayerService?.getDuration()?.toFloat() ?: 0f
         _isPlaying.value = true
+
+        viewModelScope.launch {
+            while (true) {
+                _currentPosition.value = musicPlayerService?.getCurrentPosition()?.toFloat() ?: 0f
+                delay(500)
+            }
+        }
     }
 
     fun playOrPauseMusic() {
-        mediaPlayer?.let {
             if (_isPlaying.value) {
-                it.pause()
+                musicPlayerService?.pauseMusic()
             } else {
-                it.start()
+                musicPlayerService?.resumeMusic()
             }
             _isPlaying.value = !_isPlaying.value
-        }
     }
 
     fun seekToPosition(position: Float) {
-        mediaPlayer?.seekTo(position.toInt())
+        musicPlayerService?.seekTo(position.toInt())
         _currentPosition.value = position
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        musicPlayerService = null
     }
 }
