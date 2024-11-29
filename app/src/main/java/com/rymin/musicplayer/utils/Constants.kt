@@ -3,7 +3,7 @@ package com.rymin.musicplayer.utils
 object Constants {
     const val NOTIFICATION_CHANNEL_ID = "MusicPlayerChannel"
     const val NOTIFICATION_CHANNEL_NAME = "Music Player Notifications"
-    const val NOTIFICATION_ID = 1
+    const val NOTIFICATION_ID = 20241129
 
     // Media 관련 상수
     const val ACTION_PLAY = "ACTION_PLAY"
