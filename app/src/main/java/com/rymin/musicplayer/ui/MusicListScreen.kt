@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.rymin.musicplayer.data.Music
+import com.rymin.musicplayer.utils.TimeUtils
 import com.rymin.musicplayer.viewmodel.MusicListViewModel
 
 @Composable
@@ -22,6 +23,12 @@ fun MusicListScreen(
     val currentPosition by viewModel.currentPosition.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val duration by viewModel.duration.collectAsState()
+
+    var sliderPosition by remember { mutableStateOf(currentPosition) }
+
+    LaunchedEffect(currentPosition) {
+        sliderPosition = currentPosition
+    }
 
     Column(
         modifier = Modifier
@@ -94,7 +101,7 @@ fun MusicPlayerControls(
         )
 
         Text(
-            text = "${formatTime(currentPosition.toLong())} / ${formatTime(duration.toLong())}",
+            text = "${TimeUtils.formatTime(currentPosition.toLong())} / ${TimeUtils.formatTime(duration.toLong())}",
             style = MaterialTheme.typography.bodySmall
         )
 
@@ -104,10 +111,4 @@ fun MusicPlayerControls(
             Text(if (isPlaying) "Pause" else "Play")
         }
     }
-}
-
-fun formatTime(milliseconds: Long): String {
-    val minutes = (milliseconds / 1000) / 60
-    val seconds = (milliseconds / 1000) % 60
-    return "%02d:%02d".format(minutes, seconds)
 }
