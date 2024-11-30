@@ -1,17 +1,24 @@
 package com.rymin.musicplayer.viewmodel
 
 import android.app.Application
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
 import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rymin.musicplayer.data.Music
 import com.rymin.musicplayer.service.MusicPlayerService
+import com.rymin.musicplayer.utils.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class MusicListViewModel(application: Application) : ViewModel() {
     private val appContext = application.applicationContext
@@ -31,6 +38,22 @@ class MusicListViewModel(application: Application) : ViewModel() {
     private val _duration = MutableStateFlow(0f)
     val duration: StateFlow<Float> get() = _duration
 
+    private var isServiceBound = false
+
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as MusicPlayerService.MusicPlayerBinder
+            musicPlayerService = binder.getService()
+            bindService(binder.getService())
+            isServiceBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            musicPlayerService = null
+            isServiceBound = false
+        }
+    }
     init {
         fetchMusicList()
     }
@@ -48,6 +71,7 @@ class MusicListViewModel(application: Application) : ViewModel() {
 
     fun unbindService() {
         musicPlayerService = null
+        appContext.unbindService(serviceConnection)
     }
 
     private fun fetchMusicList() {
@@ -99,12 +123,15 @@ class MusicListViewModel(application: Application) : ViewModel() {
     }
 
     fun playMusic(music: Music) {
-        musicPlayerService?.playMusic(music)
-
-        _currentMusic.value = music
-        _duration.value = musicPlayerService?.getDuration()?.toFloat() ?: 0f
-        _isPlaying.value = true
-
+        startMusicService(appContext)
+        bindToService(appContext)
+        viewModelScope.launch {
+            delay(500) // 바인딩이 완료될 때까지 기다림
+            musicPlayerService?.playMusic(music)
+            _currentMusic.value = music
+            _duration.value = musicPlayerService?.getDuration()?.toFloat() ?: 0f
+            _isPlaying.value = true
+        }
         viewModelScope.launch {
             while (true) {
                 _currentPosition.value = musicPlayerService?.getCurrentPosition()?.toFloat() ?: 0f
@@ -112,9 +139,14 @@ class MusicListViewModel(application: Application) : ViewModel() {
             }
         }
     }
+    fun bindToService(context: Context) {
+        val intent = Intent(context, MusicPlayerService::class.java)
+        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+    }
 
     fun playOrPauseMusic() {
             if (_isPlaying.value) {
+                stopMusicService(appContext)
                 musicPlayerService?.pauseMusic()
             } else {
                 musicPlayerService?.resumeMusic()
@@ -130,5 +162,18 @@ class MusicListViewModel(application: Application) : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         musicPlayerService = null
+    }
+
+
+    fun startMusicService(context: Context) {
+        val intent = Intent(Constants.ACTION_START_FOREGROUND)
+        intent.setPackage(context.packageName)
+        context.sendBroadcast(intent)
+    }
+
+    fun stopMusicService(context: Context) {
+        val intent = Intent(Constants.ACTION_STOP_FOREGROUND)
+        intent.setPackage(context.packageName)
+        context.sendBroadcast(intent)
     }
 }
