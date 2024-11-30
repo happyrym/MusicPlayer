@@ -2,6 +2,7 @@
 accompanistPermissions = "0.30.0"
 agp = "8.5.2"
 coilCompose = "2.4.0"
+coreKtxVersion = "1.10.1"
 datastorePreferences = "1.1.1"
 exoplayer = "2.19.1"
 koinAndroid = "3.5.0"
@@ -23,6 +24,7 @@ workRuntimeKtx = "2.10.0"
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-ktx-v1101 = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
