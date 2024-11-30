@@ -29,6 +29,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onBackPressed() {
+        if (viewModel.selectedAlbum != null) {
+            viewModel.showAlbumList()
+        } else {
+            super.onBackPressed()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         viewModel.unbindService()

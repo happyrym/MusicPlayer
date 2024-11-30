@@ -91,4 +91,6 @@ dependencies {
 
     // Notifications and WorkManager
     implementation(libs.androidx.work.runtime.ktx)
+
+    implementation( libs.androidx.core.ktx.v1101)
 }
