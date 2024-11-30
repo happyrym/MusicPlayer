@@ -173,7 +173,9 @@ class MusicListViewModel(application: Application) : ViewModel() {
             musicList
         }
     }
-
+    fun showAlbumList() {
+        _selectedAlbum.value = null
+    }
     fun selectedAlbum(album: Album) {
         _selectedAlbum.value = album // 선택된 앨범 상태 업데이트
         viewModelScope.launch {

@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -70,6 +69,16 @@ fun MusicListScreen(
                     viewModel.selectedAlbum(album)
                 })
         }else{
+            IconButton(
+                onClick = { viewModel.showAlbumList() },
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_btn_back),
+                    contentDescription = "Back Button",
+                    modifier = Modifier.size(24.dp) // 아이콘 크기 설정
+                )
+            }
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
