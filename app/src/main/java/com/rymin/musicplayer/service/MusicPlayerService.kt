@@ -11,18 +11,27 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Binder
+import android.os.Bundle
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.media.session.MediaButtonReceiver
+import com.rymin.musicplayer.MainActivity
 import com.rymin.musicplayer.R
 import com.rymin.musicplayer.data.Music
-import com.rymin.musicplayer.utils.Constants
+import com.rymin.musicplayer.utils.Constants.ACTION_LOOP
+import com.rymin.musicplayer.utils.Constants.ACTION_NEXT
+import com.rymin.musicplayer.utils.Constants.ACTION_PAUSE
+import com.rymin.musicplayer.utils.Constants.ACTION_PLAY
+import com.rymin.musicplayer.utils.Constants.ACTION_PREV
+import com.rymin.musicplayer.utils.Constants.ACTION_SHUFFLE
+import com.rymin.musicplayer.utils.Constants.ACTION_START_FOREGROUND
+import com.rymin.musicplayer.utils.Constants.ACTION_STOP_FOREGROUND
 import com.rymin.musicplayer.utils.Constants.NOTIFICATION_CHANNEL_ID
+import com.rymin.musicplayer.utils.Constants.NOTIFICATION_CHANNEL_NAME
 import com.rymin.musicplayer.utils.Constants.NOTIFICATION_ID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,19 +69,31 @@ class MusicPlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        createNotificationChannel()
 
         mediaSession = MediaSessionCompat(applicationContext, "MusicService").apply {
             setCallback(object : MediaSessionCompat.Callback() {
+                override fun onCustomAction(action: String?, extras: Bundle?) {
+                    super.onCustomAction(action, extras)
+                    when (action) {
+                        ACTION_PREV -> playPrevMusic()
+                        ACTION_NEXT -> playNextMusic()
+                        ACTION_LOOP -> changeLoopMode()
+                        ACTION_SHUFFLE -> changeShuffleMode()
+                    }
+
+                }
+
                 override fun onPlay() {
                     isActive = true
                     resumeMusic()
-                    updateNotification(isPlaying = true)
+                    updateNotification()
                 }
 
                 override fun onPause() {
                     isActive = false
                     pauseMusic()
-                    updateNotification(isPlaying = false)
+                    updateNotification()
                 }
 
                 override fun onStop() {
@@ -89,18 +110,15 @@ class MusicPlayerService : Service() {
         Timber.d("onStartCommand ${intent?.action}")
         MediaButtonReceiver.handleIntent(mediaSession, intent)
         createNotificationChannel()
-        // 기본 Notification 생성
-        val notification = createNotification(false)
-        startForeground(NOTIFICATION_ID, notification)
-        // Action 처리
         when (intent?.action) {
-            Constants.ACTION_START_FOREGROUND -> {
-                val notification = createNotification(isPlaying = true)
+            ACTION_START_FOREGROUND -> {
+                val notification = createNotification()
                 startForeground(NOTIFICATION_ID, notification)
             }
-            Constants.ACTION_PLAY -> resumeMusic()
-            Constants.ACTION_PAUSE -> pauseMusic()
-            Constants.ACTION_STOP_FOREGROUND -> stopForegroundService()
+
+            ACTION_STOP_FOREGROUND -> stopForegroundService()
+            ACTION_PLAY -> resumeMusic()
+            ACTION_PAUSE -> pauseMusic()
         }
         return START_STICKY
     }
@@ -109,11 +127,10 @@ class MusicPlayerService : Service() {
         stopSelf()
     }
 
-
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
-            "Music Player Notifications",
+            NOTIFICATION_CHANNEL_NAME,
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "Channel for music player notifications"
@@ -123,61 +140,29 @@ class MusicPlayerService : Service() {
         manager?.createNotificationChannel(channel)
     }
 
-    private fun createPendingIntent(intentAction: String): PendingIntent {
-        val intent = Intent(this, MusicPlayerService::class.java).apply {
-            action = intentAction
+    private fun createNotification(): Notification {
+        val notificationIntent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
-        return PendingIntent.getService(
+
+        val pendingIntent = PendingIntent.getActivity(
             this,
             0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            notificationIntent,
+            PendingIntent.FLAG_IMMUTABLE
         )
-    }
-    private fun createNotification(isPlaying: Boolean): Notification {
-        val playPausePendingIntent = createPendingIntent(
-            if (isPlaying) Constants.ACTION_PAUSE else Constants.ACTION_PLAY
-        )
-        val shufflePendingIntent = createPendingIntent(Constants.ACTION_SUFFLE)
 
-
-        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Music Player")
-            .setContentText(if (isPlaying) "Now playing..." else "No music playing")
+        return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_btn_list)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
                     .setMediaSession(mediaSession.sessionToken)
-                    .setShowActionsInCompactView(1, 2, 3)
             )
-            .addAction(
-                R.drawable.ic_btn_loop, "loop",
-                shufflePendingIntent
-            )
-            .addAction(
-                R.drawable.ic_btn_prev, "prev",
-                playPausePendingIntent
-            )
-            .addAction(
-                if (isPlaying) R.drawable.ic_btn_pause else R.drawable.ic_btn_play,
-                if (isPlaying) "Pause" else "Play",
-                playPausePendingIntent
-            )
-            .addAction(
-                R.drawable.ic_btn_next, "next",
-                playPausePendingIntent
-            )
-            .addAction(
-                R.drawable.ic_btn_shuffle, "shuffle",
-                playPausePendingIntent
-            )
+            .setContentIntent(pendingIntent)
             .setOngoing(true)
-
-
-        // Notification 생성 및 반환
-        return builder.build()
+            .build()
     }
 
     private fun updateMediaMetadata(music: Music) {
@@ -194,8 +179,9 @@ class MusicPlayerService : Service() {
         if (currentMusic.value?.filePath == music.filePath && mediaPlayer?.isPlaying == true) {
             return
         }
-        stopMusic()
         _currentMusic.value = music
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
         mediaPlayer = MediaPlayer().apply {
             updateMediaMetadata(music)
             setDataSource(applicationContext, Uri.parse(music.filePath))
@@ -206,26 +192,27 @@ class MusicPlayerService : Service() {
             }
         }
         _isPlaying.value = true
-        updateNotification(true)
+        updateNotification()
+        updatePlaybackState()
     }
 
     fun pauseMusic() {
-        Timber.d("rymins service: pause")
         mediaPlayer?.pause()
         _isPlaying.value = false
-        updateNotification(false)
+        updateNotification()
+        updatePlaybackState()
     }
 
     fun resumeMusic() {
         mediaPlayer?.start()
         _isPlaying.value = true
-        updateNotification(true)
+        updateNotification()
+        updatePlaybackState()
     }
 
     fun setPlaylist(musicList: List<Music>, selectedMusic: Music? = null) {
         playlist.clear()
         playlist.addAll(musicList)
-        Timber.d("rymins setplay")
 
         selectedMusic?.let {
             selectMusic(it)
@@ -248,12 +235,14 @@ class MusicPlayerService : Service() {
 
     fun changeLoopMode() {
         _isLoop.value = !_isLoop.value
+        updatePlaybackState()
     }
 
     fun changeShuffleMode() {
         _isShuffle.value = !_isShuffle.value
         _isLoop.value = _isShuffle.value
         shufflePlaylist()
+        updatePlaybackState()
     }
 
     private fun shufflePlaylist() {
@@ -299,7 +288,7 @@ class MusicPlayerService : Service() {
                 if (currentIndex - 1 < 0) {
                     Toast.makeText(this, "이전곡이 없습니다.", Toast.LENGTH_SHORT).show()
                 } else {
-                    currentIndex -= 1 // 이전 곡으로 순환
+                    currentIndex -= 1
                 }
             }
             val prevMusic = playlist[currentIndex]
@@ -310,19 +299,11 @@ class MusicPlayerService : Service() {
         }
     }
 
-    private fun updateNotification(isPlaying: Boolean) {
-        val notification = createNotification(isPlaying)
+    private fun updateNotification() {
+        val notification = createNotification()
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, notification)
-    }
-
-    private fun stopMusic() {
-        mediaPlayer?.stop()
-        mediaPlayer?.release()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        NotificationManagerCompat.from(this).cancel(NOTIFICATION_ID)
-        mediaPlayer = null
     }
 
     fun getCurrentPosition(): Int {
@@ -337,10 +318,35 @@ class MusicPlayerService : Service() {
         mediaPlayer?.seekTo(position)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        stopMusic()
-        mediaPlayer?.release()
-        mediaSession.release()
+
+    private fun updatePlaybackState() {
+        val state = if (_isPlaying.value) {
+            PlaybackStateCompat.STATE_PLAYING
+        } else {
+            PlaybackStateCompat.STATE_PAUSED
+        }
+
+        mediaSession.setPlaybackState(
+            PlaybackStateCompat.Builder()
+                .setActions(
+                    PlaybackStateCompat.ACTION_PLAY or
+                            PlaybackStateCompat.ACTION_PAUSE or
+                            PlaybackStateCompat.ACTION_STOP
+                )
+                .addCustomAction(ACTION_PREV, ACTION_PREV, R.drawable.ic_btn_prev)
+                .addCustomAction(ACTION_NEXT, ACTION_NEXT, R.drawable.ic_btn_next)
+                .addCustomAction(
+                    ACTION_LOOP,
+                    ACTION_LOOP,
+                    if (_isLoop.value) R.drawable.ic_btn_loop else R.drawable.ic_btn_loop_disable
+                )
+                .addCustomAction(
+                    ACTION_SHUFFLE,
+                    ACTION_SHUFFLE,
+                    if (_isShuffle.value) R.drawable.ic_btn_shuffle else R.drawable.ic_btn_shuffle_disable
+                )
+                .setState(state, 0, 1.0f)
+                .build()
+        )
     }
 }
