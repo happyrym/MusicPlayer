@@ -254,6 +254,10 @@ class MusicPlayerService : Service() {
         }
     }
 
+    fun changeLoopMode() {
+        _isLoop.value = !_isLoop.value
+    }
+
     fun playPrevMusic() {
         if (playlist.isNotEmpty()) {
             if (_isLoop.value) {
