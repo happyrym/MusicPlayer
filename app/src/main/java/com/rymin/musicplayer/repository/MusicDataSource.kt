@@ -7,7 +7,7 @@ import kotlinx.coroutines.withContext
 
 class MusicDataSource(private val context: Context) {
     suspend fun getMusicList(): List<Music> {
-        return withContext(Dispatchers.IO) { // I/O 스레드에서 실행
+        return withContext(Dispatchers.IO) {
             val musicList = mutableListOf<Music>()
             val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             val projection = arrayOf(

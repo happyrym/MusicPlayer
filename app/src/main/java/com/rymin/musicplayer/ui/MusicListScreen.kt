@@ -51,6 +51,7 @@ fun MusicListScreen(
     val selectedAlbum by viewModel.selectedAlbum.collectAsState()
     val albumList by viewModel.albumList.collectAsState()
     val isLoop by viewModel.isLoop.collectAsState()
+    val isShuffle by viewModel.isShuffle.collectAsState()
 
     var sliderPosition by remember { mutableStateOf(currentPosition) }
 
@@ -106,11 +107,13 @@ fun MusicListScreen(
                 duration = duration,
                 isPlaying = isPlaying,
                 isLoop = isLoop,
+                isShuffle=isShuffle,
                 onPlayPauseClick = viewModel::playOrPauseMusic,
                 onSeek = viewModel::seekToPosition,
                 onNextClick = viewModel::playNextMusic,
                 onPrevClick = viewModel::playPrevMusic,
-                onLoopClick = viewModel::changeLoopMode
+                onLoopClick = viewModel::changeLoopMode,
+                onShuffleClick = viewModel::changeShuffleMode,
             )
         }
     }
@@ -244,11 +247,13 @@ fun MusicPlayerControls(
     duration: Float,
     isPlaying: Boolean,
     isLoop: Boolean,
+    isShuffle:Boolean,
     onPlayPauseClick: () -> Unit,
     onSeek: (Float) -> Unit,
     onNextClick: () -> Unit,
     onPrevClick: () -> Unit,
     onLoopClick: () -> Unit,
+    onShuffleClick:() ->Unit,
 ) {
     Column(
         modifier = Modifier
@@ -278,6 +283,7 @@ fun MusicPlayerControls(
         Spacer(modifier = Modifier.height(8.dp))
 
         Row {
+            ShuffleButon(isShuffle, onClick = { onShuffleClick() })
             Button(onClick = { onPrevClick() }) {
                 Text("prev")
             }
@@ -291,6 +297,21 @@ fun MusicPlayerControls(
         }
     }
 
+}
+@Composable
+fun ShuffleButon(isShuffle: Boolean, onClick: () -> Unit) {
+    IconButton(
+        onClick = { onClick() },
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Image(
+            modifier = Modifier.size(24.dp),
+            painter = painterResource(id = R.drawable.ic_btn_shuffle),
+            contentScale = ContentScale.Fit,
+            contentDescription = "Loop Button",
+            colorFilter = if (!isShuffle) ColorFilter.tint(Color.Gray) else null,
+        )
+    }
 }
 
 @Composable

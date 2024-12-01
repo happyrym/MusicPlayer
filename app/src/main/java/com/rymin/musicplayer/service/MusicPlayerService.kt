@@ -37,6 +37,9 @@ class MusicPlayerService : Service() {
     private val _isLoop = MutableStateFlow(false)
     val isLoop: StateFlow<Boolean> get() = _isLoop
 
+    private val _isShuffle = MutableStateFlow(false)
+    val isShuffle: StateFlow<Boolean> get() = _isShuffle
+
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> get() = _isPlaying
 
@@ -132,7 +135,8 @@ class MusicPlayerService : Service() {
         val playPausePendingIntent = createPendingIntent(
             if (isPlaying) Constants.ACTION_PAUSE else Constants.ACTION_PLAY
         )
-        val sufflePendingIntent = createPendingIntent(Constants.ACTION_SUFFLE)
+        val shufflePendingIntent = createPendingIntent(Constants.ACTION_SUFFLE)
+
 
         val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Music Player")
@@ -147,7 +151,7 @@ class MusicPlayerService : Service() {
             )
             .addAction(
                 R.drawable.ic_btn_loop, "loop",
-                sufflePendingIntent
+                shufflePendingIntent
             )
             .addAction(
                 R.drawable.ic_btn_prev, "prev",
@@ -163,7 +167,7 @@ class MusicPlayerService : Service() {
                 playPausePendingIntent
             )
             .addAction(
-                R.drawable.ic_btn_suffle, "suffle",
+                R.drawable.ic_btn_shuffle, "shuffle",
                 playPausePendingIntent
             )
             .setOngoing(true)
@@ -222,6 +226,7 @@ class MusicPlayerService : Service() {
 
         selectedMusic?.let {
             selectMusic(it)
+            shufflePlaylist()
         } ?: run {
             Timber.d("rymins current: set0")
             currentIndex = 0
@@ -238,6 +243,30 @@ class MusicPlayerService : Service() {
         }
     }
 
+    fun changeLoopMode() {
+        _isLoop.value = !_isLoop.value
+    }
+
+    fun changeShuffleMode() {
+        _isShuffle.value = !_isShuffle.value
+        _isLoop.value = _isShuffle.value
+        shufflePlaylist()
+    }
+
+    private fun shufflePlaylist() {
+        if (_isShuffle.value) {
+            playlist.shuffle()
+        } else {
+            // 셔플 해제 시 원래 순서를 복구하거나 현재 순서를 유지할 수 있습니다.
+            playlist.sortBy { it.title } // 예: ID 순으로 정렬
+        }
+        currentIndex = playlist.indexOfFirst { it.id == _currentMusic.value?.id }
+        if (currentIndex == -1) {
+            currentIndex = 0
+        }
+        }
+    }
+
     fun playNextMusic(isComplete: Boolean = false) {
         if (playlist.isNotEmpty()) {
             if (_isLoop.value) {
@@ -245,9 +274,8 @@ class MusicPlayerService : Service() {
             } else {
                 if (currentIndex + 1 >= playlist.size) {
                     Toast.makeText(this, "다음곡이 없습니다.", Toast.LENGTH_SHORT).show()
-                    if(isComplete){
-                        return
-                    }
+                    if (isComplete) return
+
                 } else {
                     currentIndex = (currentIndex + 1) % playlist.size
                 }
@@ -260,20 +288,16 @@ class MusicPlayerService : Service() {
         }
     }
 
-    fun changeLoopMode() {
-        _isLoop.value = !_isLoop.value
-    }
-
     fun playPrevMusic() {
         if (playlist.isNotEmpty()) {
             if (_isLoop.value) {
                 currentIndex =
-                    if (currentIndex - 1 < 0) playlist.size - 1 else currentIndex - 1 // 이전 곡으로 순환
+                    if (currentIndex - 1 < 0) playlist.size - 1 else currentIndex - 1
             } else {
                 if (currentIndex - 1 < 0) {
                     Toast.makeText(this, "이전곡이 없습니다.", Toast.LENGTH_SHORT).show()
                 } else {
-                    currentIndex = currentIndex - 1 // 이전 곡으로 순환
+                    currentIndex -= 1 // 이전 곡으로 순환
                 }
             }
             val prevMusic = playlist[currentIndex]
