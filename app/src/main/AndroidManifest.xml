@@ -31,7 +31,20 @@
             android:name=".service.MusicPlayerService"
             android:foregroundServiceType="mediaPlayback" />
 
-        <receiver android:name=".service.MusicBroadcastReceiver" />
+        <receiver android:name=".service.MusicBroadcastReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name="androidx.media.session.MediaButtonReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
         <activity
             android:name=".MainActivity"
             android:exported="true"
