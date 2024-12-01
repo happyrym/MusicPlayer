@@ -45,6 +45,8 @@ class MusicListViewModel(application: Application) : ViewModel() {
     private val _isLoop = MutableStateFlow(false)
     val isLoop: StateFlow<Boolean> get() = _isLoop
 
+    private val _isShuffle = MutableStateFlow(false)
+    val isShuffle: StateFlow<Boolean> get() = _isShuffle
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> get() = _isPlaying
@@ -90,6 +92,11 @@ class MusicListViewModel(application: Application) : ViewModel() {
         viewModelScope.launch {
             service.isLoop.collect { isLoop ->
                 _isLoop.value = isLoop
+            }
+        }
+        viewModelScope.launch {
+            service.isShuffle.collect { isShuffle ->
+                _isShuffle.value = isShuffle
             }
         }
     }
@@ -276,6 +283,9 @@ class MusicListViewModel(application: Application) : ViewModel() {
     fun changeLoopMode() {
         musicPlayerService?.changeLoopMode()
     }
+    fun changeShuffleMode(){
+        musicPlayerService?.changeShuffleMode()
+    }
 
     fun bindToService(context: Context) {
         val intent = Intent(context, MusicPlayerService::class.java)
@@ -288,6 +298,14 @@ class MusicListViewModel(application: Application) : ViewModel() {
             musicPlayerService?.pauseMusic()
         } else {
             musicPlayerService?.resumeMusic()
+            viewModelScope.launch {
+//                delay(200)
+                while (_isPlaying.value) {
+                    _currentPosition.value =
+                        musicPlayerService?.getCurrentPosition()?.toFloat() ?: 0f
+                    delay(500)
+                }
+            }
         }
     }
 

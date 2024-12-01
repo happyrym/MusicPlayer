@@ -22,7 +22,6 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        // OnBackPressedDispatcher 사용
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (viewModel.selectedAlbum.value != null) {
