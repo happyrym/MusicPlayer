@@ -2,46 +2,40 @@ package com.rymin.musicplayer
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.rymin.musicplayer.ui.theme.MusicPlayerTheme
+import com.rymin.musicplayer.ui.MusicListScreen
+import com.rymin.musicplayer.viewmodel.MusicListViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
+
+    // Koin의 ViewModel 주입
+    private val viewModel: MusicListViewModel by viewModel()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
         setContent {
-            MusicPlayerTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+            MusicListScreen(
+                viewModel = viewModel,
+                onMusicSelected = { music -> viewModel.playMusic(music) }
+            )
+        }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (viewModel.selectedAlbum.value != null) {
+                    viewModel.showAlbumList()
+                } else {
+                    finish()
                 }
             }
-        }
+        })
+
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MusicPlayerTheme {
-        Greeting("Android")
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.unbindService()
     }
 }
