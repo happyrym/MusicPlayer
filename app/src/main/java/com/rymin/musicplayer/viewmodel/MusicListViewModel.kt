@@ -111,7 +111,6 @@ class MusicListViewModel(application: Application) : ViewModel() {
 
     private fun fetchMusicList() {
         viewModelScope.launch {
-            Timber.d("rymins fetch")
             _musicList.value = getMusicList()
             _albumList.value = getAlbumList()
         }
@@ -207,7 +206,6 @@ class MusicListViewModel(application: Application) : ViewModel() {
     fun selectedAlbum(album: Album) {
         _selectedAlbum.value = album // 선택된 앨범 상태 업데이트
         viewModelScope.launch {
-            Timber.d("rymins selsecalbum")
             _musicList.value = getMusicListByAlbum(album.id) // 앨범 ID로 음악 목록 로드
         }
     }
@@ -215,7 +213,6 @@ class MusicListViewModel(application: Application) : ViewModel() {
     private suspend fun getMusicListByAlbum(albumId: Long): List<Music> {
         return withContext(Dispatchers.IO) {
             val musicList = mutableListOf<Music>()
-            Timber.d("rymins here1")
             val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             val projection = arrayOf(
                 MediaStore.Audio.Media._ID,
