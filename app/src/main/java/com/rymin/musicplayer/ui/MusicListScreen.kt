@@ -52,6 +52,7 @@ fun MusicListScreen(
     val isLoop by viewModel.isLoop.collectAsState()
     val isShuffle by viewModel.isShuffle.collectAsState()
 
+    var isBottomSheetVisible by remember { mutableStateOf(false) }
     var sliderPosition by remember { mutableStateOf(currentPosition) }
 
     LaunchedEffect(currentPosition) {
@@ -100,20 +101,49 @@ fun MusicListScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         currentMusic?.let { music ->
-            MusicPlayerControls(
-                musicTitle = music.title,
-                currentPosition = currentPosition,
-                duration = duration,
-                isPlaying = isPlaying,
-                isLoop = isLoop,
-                isShuffle=isShuffle,
-                onPlayPauseClick = viewModel::playOrPauseMusic,
-                onSeek = viewModel::seekToPosition,
-                onNextClick = viewModel::playNextMusic,
-                onPrevClick = viewModel::playPrevMusic,
-                onLoopClick = viewModel::changeLoopMode,
-                onShuffleClick = viewModel::changeShuffleMode,
-            )
+            Box(Modifier
+                .clickable {
+                    isBottomSheetVisible = true
+                }) {
+                MusicPlayerControls(
+                    musicTitle = music.title,
+                    artistName = music.artist,
+                    currentPosition = currentPosition,
+                    duration = duration,
+                    isPlaying = isPlaying,
+                    isLoop = isLoop,
+                    isShuffle = isShuffle,
+                    onPlayPauseClick = viewModel::playOrPauseMusic,
+                    onSeek = viewModel::seekToPosition,
+                    onNextClick = viewModel::playNextMusic,
+                    onPrevClick = viewModel::playPrevMusic,
+                    onLoopClick = viewModel::changeLoopMode,
+                    onShuffleClick = viewModel::changeShuffleMode,
+                )
+            }
+            if (isBottomSheetVisible) {
+                MusicInfoBottomSheet(
+                    music = music,
+                    widget = {
+                        MusicPlayerControls(
+                            musicTitle = music.title,
+                            artistName = music.artist,
+                            currentPosition = currentPosition,
+                            duration = duration,
+                            isPlaying = isPlaying,
+                            isLoop = isLoop,
+                            isShuffle = isShuffle,
+                            onPlayPauseClick = viewModel::playOrPauseMusic,
+                            onSeek = viewModel::seekToPosition,
+                            onNextClick = viewModel::playNextMusic,
+                            onPrevClick = viewModel::playPrevMusic,
+                            onLoopClick = viewModel::changeLoopMode,
+                            onShuffleClick = viewModel::changeShuffleMode,
+                        )
+                    },
+                    onDismiss = { isBottomSheetVisible = false }
+                )
+            }
         }
     }
 }
@@ -242,17 +272,18 @@ fun getAlbumArt(context: Context, albumId: Long): Any? {
 @Composable
 fun MusicPlayerControls(
     musicTitle: String,
+    artistName: String,
     currentPosition: Float,
     duration: Float,
     isPlaying: Boolean,
     isLoop: Boolean,
-    isShuffle:Boolean,
+    isShuffle: Boolean,
     onPlayPauseClick: () -> Unit,
     onSeek: (Float) -> Unit,
     onNextClick: () -> Unit,
     onPrevClick: () -> Unit,
     onLoopClick: () -> Unit,
-    onShuffleClick:() ->Unit,
+    onShuffleClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -260,7 +291,7 @@ fun MusicPlayerControls(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Now Playing: $musicTitle", style = MaterialTheme.typography.bodyLarge)
+        Text(text = " $musicTitle - $artistName", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.height(8.dp))
 
         Slider(
@@ -300,7 +331,7 @@ fun MusicPlayerControls(
             ) {
                 Image(
                     modifier = Modifier.size(24.dp),
-                    painter = painterResource(id =if (isPlaying) R.drawable.ic_btn_pause else R.drawable.ic_btn_play),
+                    painter = painterResource(id = if (isPlaying) R.drawable.ic_btn_pause else R.drawable.ic_btn_play),
                     contentScale = ContentScale.Fit,
                     contentDescription = "Play/Pause Button",
                 )
@@ -321,6 +352,7 @@ fun MusicPlayerControls(
     }
 
 }
+
 @Composable
 fun ShuffleButton(isShuffle: Boolean, onClick: () -> Unit) {
     IconButton(
@@ -350,5 +382,95 @@ fun LoopButton(isLoop: Boolean, onClick: () -> Unit) {
             contentDescription = "Loop Button",
             colorFilter = if (!isLoop) ColorFilter.tint(Color.Gray) else null,
         )
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MusicInfoBottomSheet(
+    music: Music,
+    widget: @Composable () -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            val context = LocalContext.current
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(128.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Top)
+                        .padding(start = 32.dp)
+                ) {
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.Center // Box 내 중앙 정렬
+                ) {
+                    when (val albumArt = getAlbumArt(context, music.albumId)) {
+                        is Bitmap -> Image(
+                            bitmap = albumArt.asImageBitmap(),
+                            contentDescription = "Album Art",
+                            modifier = Modifier
+                                .size(128.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Gray),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        is Uri -> AsyncImage(
+                            model = albumArt,
+                            contentDescription = "Album Art",
+                            modifier = Modifier
+                                .size(128.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Gray),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        else -> Image(
+                            painter = painterResource(R.drawable.ic_btn_list),
+                            contentDescription = "Default Album Art",
+                            modifier = Modifier
+                                .size(128.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Gray),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Top)
+                        .padding(end = 8.dp)
+                ) {
+                    Button(
+                        onClick = { onDismiss() },
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .size(36.dp)
+                    ) {
+                        Text(text = "X")
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            widget()
+        }
     }
 }
