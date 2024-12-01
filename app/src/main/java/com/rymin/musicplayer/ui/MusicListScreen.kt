@@ -292,7 +292,6 @@ fun MusicPlayerControls(
                     painter = painterResource(id = R.drawable.ic_btn_prev),
                     contentScale = ContentScale.Fit,
                     contentDescription = "Prev Button",
-                    colorFilter = if (!isShuffle) ColorFilter.tint(Color.Gray) else null,
                 )
             }
             IconButton(
@@ -303,8 +302,7 @@ fun MusicPlayerControls(
                     modifier = Modifier.size(24.dp),
                     painter = painterResource(id =if (isPlaying) R.drawable.ic_btn_pause else R.drawable.ic_btn_play),
                     contentScale = ContentScale.Fit,
-                    contentDescription = "Prev Button",
-                    colorFilter = if (!isShuffle) ColorFilter.tint(Color.Gray) else null,
+                    contentDescription = "Play/Pause Button",
                 )
             }
             IconButton(
@@ -315,8 +313,7 @@ fun MusicPlayerControls(
                     modifier = Modifier.size(24.dp),
                     painter = painterResource(id = R.drawable.ic_btn_next),
                     contentScale = ContentScale.Fit,
-                    contentDescription = "Prev Button",
-                    colorFilter = if (!isShuffle) ColorFilter.tint(Color.Gray) else null,
+                    contentDescription = "Next Button",
                 )
             }
             LoopButton(isLoop, onClick = { onLoopClick() })
@@ -332,7 +329,7 @@ fun ShuffleButton(isShuffle: Boolean, onClick: () -> Unit) {
     ) {
         Image(
             modifier = Modifier.size(24.dp),
-            painter = painterResource(id = R.drawable.ic_btn_shuffle),
+            painter = painterResource(id = if (!isShuffle) R.drawable.ic_btn_shuffle_disable else R.drawable.ic_btn_shuffle),
             contentScale = ContentScale.Fit,
             contentDescription = "Loop Button",
             colorFilter = if (!isShuffle) ColorFilter.tint(Color.Gray) else null,
@@ -348,7 +345,7 @@ fun LoopButton(isLoop: Boolean, onClick: () -> Unit) {
     ) {
         Image(
             modifier = Modifier.size(24.dp),
-            painter = painterResource(id = R.drawable.ic_btn_loop),
+            painter = painterResource(id = if (!isLoop) R.drawable.ic_btn_loop_disable else R.drawable.ic_btn_loop),
             contentScale = ContentScale.Fit,
             contentDescription = "Loop Button",
             colorFilter = if (!isLoop) ColorFilter.tint(Color.Gray) else null,
