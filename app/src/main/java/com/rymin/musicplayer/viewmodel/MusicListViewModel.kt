@@ -288,6 +288,14 @@ class MusicListViewModel(application: Application) : ViewModel() {
             musicPlayerService?.pauseMusic()
         } else {
             musicPlayerService?.resumeMusic()
+            viewModelScope.launch {
+//                delay(200)
+                while (_isPlaying.value) {
+                    _currentPosition.value =
+                        musicPlayerService?.getCurrentPosition()?.toFloat() ?: 0f
+                    delay(500)
+                }
+            }
         }
     }
 

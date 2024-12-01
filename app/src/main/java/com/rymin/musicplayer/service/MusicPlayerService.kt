@@ -194,6 +194,9 @@ class MusicPlayerService : Service() {
             setDataSource(applicationContext, Uri.parse(music.filePath))
             prepare()
             start()
+            setOnCompletionListener {
+                playNextMusic(true)
+            }
         }
         _isPlaying.value = true
         updateNotification(true)
@@ -235,13 +238,16 @@ class MusicPlayerService : Service() {
         }
     }
 
-    fun playNextMusic() {
+    fun playNextMusic(isComplete: Boolean = false) {
         if (playlist.isNotEmpty()) {
             if (_isLoop.value) {
                 currentIndex = (currentIndex + 1) % playlist.size // 다음 곡으로 순환
             } else {
                 if (currentIndex + 1 >= playlist.size) {
                     Toast.makeText(this, "다음곡이 없습니다.", Toast.LENGTH_SHORT).show()
+                    if(isComplete){
+                        return
+                    }
                 } else {
                     currentIndex = (currentIndex + 1) % playlist.size
                 }
