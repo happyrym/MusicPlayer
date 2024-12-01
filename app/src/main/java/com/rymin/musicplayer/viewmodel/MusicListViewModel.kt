@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.media.AudioManager
 import android.os.IBinder
 import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
@@ -30,9 +31,6 @@ class MusicListViewModel(application: Application) : ViewModel() {
     private val _selectedAlbum = MutableStateFlow<Album?>(null)
     val selectedAlbum: StateFlow<Album?> get() = _selectedAlbum
 
-    private val _playlist = MutableStateFlow<List<Music>>(emptyList())
-    val playlist: StateFlow<List<Music>> get() = _playlist
-
     private val _albumList = MutableStateFlow<List<Album>>(emptyList())
     val albumList: StateFlow<List<Album>> get() = _albumList
 
@@ -47,6 +45,10 @@ class MusicListViewModel(application: Application) : ViewModel() {
 
     private val _isShuffle = MutableStateFlow(false)
     val isShuffle: StateFlow<Boolean> get() = _isShuffle
+
+    private val _volume = MutableStateFlow(0f)
+    val volume: StateFlow<Float> get() = _volume
+
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> get() = _isPlaying
@@ -166,7 +168,8 @@ class MusicListViewModel(application: Application) : ViewModel() {
                 MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.ARTIST,
                 MediaStore.Audio.Media.DURATION,
-                MediaStore.Audio.Media.DATA
+                MediaStore.Audio.Media.DATA,
+                MediaStore.Audio.Media.ALBUM_ID
             )
             val cursor = appContext.contentResolver.query(
                 musicUri,
@@ -182,6 +185,8 @@ class MusicListViewModel(application: Application) : ViewModel() {
                 val artistIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                 val durationIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
                 val dataIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+                val albumIdIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
+
 
                 while (it.moveToNext()) {
                     musicList.add(
@@ -190,7 +195,8 @@ class MusicListViewModel(application: Application) : ViewModel() {
                             title = it.getString(titleIndex),
                             artist = it.getString(artistIndex),
                             duration = it.getLong(durationIndex),
-                            filePath = it.getString(dataIndex)
+                            filePath = it.getString(dataIndex),
+                            albumId = it.getLong(albumIdIndex),
                         )
                     )
                 }
@@ -245,7 +251,8 @@ class MusicListViewModel(application: Application) : ViewModel() {
                             title = it.getString(titleIndex),
                             artist = it.getString(artistIndex),
                             duration = it.getLong(durationIndex),
-                            filePath = it.getString(dataIndex)
+                            filePath = it.getString(dataIndex),
+                            albumId = albumId,
                         )
                     )
                 }
@@ -320,7 +327,20 @@ class MusicListViewModel(application: Application) : ViewModel() {
         musicPlayerService = null
     }
 
+    fun getVolume() {
+        val audioManager = appContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        _volume.value =  currentVolume / maxVolume.toFloat()
+    }
 
+    fun setVolume(volume: Float) {
+        val audioManager = appContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        val newVolume = (volume * maxVolume).toInt()
+        _volume.value =  volume
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
+    }
     private fun startMusicService(context: Context) {
         val intent = Intent(Constants.ACTION_START_FOREGROUND)
         intent.setPackage(context.packageName)

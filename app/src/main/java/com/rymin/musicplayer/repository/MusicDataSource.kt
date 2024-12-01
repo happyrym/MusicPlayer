@@ -31,6 +31,7 @@ class MusicDataSource(private val context: Context) {
                 val artistIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                 val durationIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
                 val dataIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+                val albumIdIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
 
                 while (it.moveToNext()) {
                     musicList.add(
@@ -39,7 +40,8 @@ class MusicDataSource(private val context: Context) {
                             title = it.getString(titleIndex),
                             artist = it.getString(artistIndex),
                             duration = it.getLong(durationIndex),
-                            filePath = it.getString(dataIndex)
+                            filePath = it.getString(dataIndex),
+                            albumId = it.getLong(albumIdIndex),
                         )
                     )
                 }
