@@ -14,9 +14,11 @@ import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.media.session.MediaButtonReceiver
 import com.rymin.musicplayer.R
 import com.rymin.musicplayer.data.Music
 import com.rymin.musicplayer.utils.Constants
@@ -63,11 +65,13 @@ class MusicPlayerService : Service() {
             setCallback(object : MediaSessionCompat.Callback() {
                 override fun onPlay() {
                     isActive = true
+                    resumeMusic()
                     updateNotification(isPlaying = true)
                 }
 
                 override fun onPause() {
                     isActive = false
+                    pauseMusic()
                     updateNotification(isPlaying = false)
                 }
 
@@ -77,12 +81,13 @@ class MusicPlayerService : Service() {
                     stopSelf()
                 }
             })
-            isActive = true // MediaSession 활성화
+            isActive = true
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Timber.d("onStartCommand ${intent?.action}")
+        MediaButtonReceiver.handleIntent(mediaSession, intent)
         createNotificationChannel()
         // 기본 Notification 생성
         val notification = createNotification(false)
@@ -93,7 +98,6 @@ class MusicPlayerService : Service() {
                 val notification = createNotification(isPlaying = true)
                 startForeground(NOTIFICATION_ID, notification)
             }
-
             Constants.ACTION_PLAY -> resumeMusic()
             Constants.ACTION_PAUSE -> pauseMusic()
             Constants.ACTION_STOP_FOREGROUND -> stopForegroundService()
@@ -130,7 +134,6 @@ class MusicPlayerService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
-
     private fun createNotification(isPlaying: Boolean): Notification {
         val playPausePendingIntent = createPendingIntent(
             if (isPlaying) Constants.ACTION_PAUSE else Constants.ACTION_PLAY
@@ -147,7 +150,7 @@ class MusicPlayerService : Service() {
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
                     .setMediaSession(mediaSession.sessionToken)
-                    .setShowActionsInCompactView(0, 1, 2)
+                    .setShowActionsInCompactView(1, 2, 3)
             )
             .addAction(
                 R.drawable.ic_btn_loop, "loop",
@@ -337,6 +340,7 @@ class MusicPlayerService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         stopMusic()
+        mediaPlayer?.release()
         mediaSession.release()
     }
 }

@@ -82,6 +82,9 @@ class MusicListViewModel(application: Application) : ViewModel() {
         viewModelScope.launch {
             service.isPlaying.collect { isPlaying ->
                 _isPlaying.value = isPlaying
+                if(_isPlaying.value){
+                    updateSlider()
+                }
             }
         }
         viewModelScope.launch {
@@ -298,13 +301,14 @@ class MusicListViewModel(application: Application) : ViewModel() {
             musicPlayerService?.pauseMusic()
         } else {
             musicPlayerService?.resumeMusic()
-            viewModelScope.launch {
-//                delay(200)
-                while (_isPlaying.value) {
-                    _currentPosition.value =
-                        musicPlayerService?.getCurrentPosition()?.toFloat() ?: 0f
-                    delay(500)
-                }
+        }
+    }
+     private fun updateSlider(){
+        viewModelScope.launch {
+            while (_isPlaying.value) {
+                _currentPosition.value =
+                    musicPlayerService?.getCurrentPosition()?.toFloat() ?: 0f
+                delay(500)
             }
         }
     }
