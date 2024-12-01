@@ -51,7 +51,9 @@ fun MusicListScreen(
     val albumList by viewModel.albumList.collectAsState()
     val isLoop by viewModel.isLoop.collectAsState()
     val isShuffle by viewModel.isShuffle.collectAsState()
+    val volume by viewModel.volume.collectAsState()
 
+    var isBottomSheetVisible by remember { mutableStateOf(false) }
     var sliderPosition by remember { mutableStateOf(currentPosition) }
 
     LaunchedEffect(currentPosition) {
@@ -100,20 +102,52 @@ fun MusicListScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         currentMusic?.let { music ->
-            MusicPlayerControls(
-                musicTitle = music.title,
-                currentPosition = currentPosition,
-                duration = duration,
-                isPlaying = isPlaying,
-                isLoop = isLoop,
-                isShuffle=isShuffle,
-                onPlayPauseClick = viewModel::playOrPauseMusic,
-                onSeek = viewModel::seekToPosition,
-                onNextClick = viewModel::playNextMusic,
-                onPrevClick = viewModel::playPrevMusic,
-                onLoopClick = viewModel::changeLoopMode,
-                onShuffleClick = viewModel::changeShuffleMode,
-            )
+            Box(Modifier
+                .clickable {
+                    viewModel.getVolume()
+                    isBottomSheetVisible = true
+                }) {
+                MusicPlayerControls(
+                    musicTitle = music.title,
+                    artistName = music.artist,
+                    currentPosition = currentPosition,
+                    duration = duration,
+                    isPlaying = isPlaying,
+                    isLoop = isLoop,
+                    isShuffle = isShuffle,
+                    onPlayPauseClick = viewModel::playOrPauseMusic,
+                    onSeek = viewModel::seekToPosition,
+                    onNextClick = viewModel::playNextMusic,
+                    onPrevClick = viewModel::playPrevMusic,
+                    onLoopClick = viewModel::changeLoopMode,
+                    onShuffleClick = viewModel::changeShuffleMode,
+                )
+            }
+            if (isBottomSheetVisible) {
+                MusicInfoBottomSheet(
+                    music = music,
+                    widget = {
+                        MusicPlayerControls(
+                            musicTitle = music.title,
+                            artistName = music.artist,
+                            currentPosition = currentPosition,
+                            duration = duration,
+                            isPlaying = isPlaying,
+                            isLoop = isLoop,
+                            isShuffle = isShuffle,
+                            onPlayPauseClick = viewModel::playOrPauseMusic,
+                            onSeek = viewModel::seekToPosition,
+                            onNextClick = viewModel::playNextMusic,
+                            onPrevClick = viewModel::playPrevMusic,
+                            onLoopClick = viewModel::changeLoopMode,
+                            onShuffleClick = viewModel::changeShuffleMode,
+                        )
+                    },
+                    volume = volume,
+                    setVolume = { value -> viewModel.setVolume( value) },
+                    onDismiss = { isBottomSheetVisible = false }
+                )
+            }
         }
     }
 }
@@ -242,17 +276,18 @@ fun getAlbumArt(context: Context, albumId: Long): Any? {
 @Composable
 fun MusicPlayerControls(
     musicTitle: String,
+    artistName: String,
     currentPosition: Float,
     duration: Float,
     isPlaying: Boolean,
     isLoop: Boolean,
-    isShuffle:Boolean,
+    isShuffle: Boolean,
     onPlayPauseClick: () -> Unit,
     onSeek: (Float) -> Unit,
     onNextClick: () -> Unit,
     onPrevClick: () -> Unit,
     onLoopClick: () -> Unit,
-    onShuffleClick:() ->Unit,
+    onShuffleClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -260,7 +295,7 @@ fun MusicPlayerControls(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Now Playing: $musicTitle", style = MaterialTheme.typography.bodyLarge)
+        Text(text = " $musicTitle - $artistName", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.height(8.dp))
 
         Slider(
@@ -300,7 +335,7 @@ fun MusicPlayerControls(
             ) {
                 Image(
                     modifier = Modifier.size(24.dp),
-                    painter = painterResource(id =if (isPlaying) R.drawable.ic_btn_pause else R.drawable.ic_btn_play),
+                    painter = painterResource(id = if (isPlaying) R.drawable.ic_btn_pause else R.drawable.ic_btn_play),
                     contentScale = ContentScale.Fit,
                     contentDescription = "Play/Pause Button",
                 )
@@ -321,6 +356,7 @@ fun MusicPlayerControls(
     }
 
 }
+
 @Composable
 fun ShuffleButton(isShuffle: Boolean, onClick: () -> Unit) {
     IconButton(
@@ -349,6 +385,131 @@ fun LoopButton(isLoop: Boolean, onClick: () -> Unit) {
             contentScale = ContentScale.Fit,
             contentDescription = "Loop Button",
             colorFilter = if (!isLoop) ColorFilter.tint(Color.Gray) else null,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MusicInfoBottomSheet(
+    music: Music,
+    volume: Float,
+    setVolume: (value: Float) -> Unit,
+    widget: @Composable () -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            val context = LocalContext.current
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(128.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Top)
+                        .padding(start = 32.dp)
+                ) {
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.Center // Box 내 중앙 정렬
+                ) {
+                    when (val albumArt = getAlbumArt(context, music.albumId)) {
+                        is Bitmap -> Image(
+                            bitmap = albumArt.asImageBitmap(),
+                            contentDescription = "Album Art",
+                            modifier = Modifier
+                                .size(128.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Gray),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        is Uri -> AsyncImage(
+                            model = albumArt,
+                            contentDescription = "Album Art",
+                            modifier = Modifier
+                                .size(128.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Gray),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        else -> Image(
+                            painter = painterResource(R.drawable.ic_btn_list),
+                            contentDescription = "Default Album Art",
+                            modifier = Modifier
+                                .size(128.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Gray),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Top)
+                        .padding(end = 8.dp)
+                ) {
+                    Button(
+                        onClick = { onDismiss() },
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .size(36.dp)
+                    ) {
+                        Text(text = "X")
+                    }
+                }
+            }
+            VolumeController(volume, setVolume)
+            Spacer(modifier = Modifier.height(16.dp))
+            widget()
+        }
+    }
+}
+
+@Composable
+fun VolumeController(
+    volume: Float,
+    setVolume: (value: Float) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Volume", style = MaterialTheme.typography.titleMedium)
+
+        Slider(
+            value = volume,
+            onValueChange = { newValue ->
+                setVolume(newValue) // 볼륨 값 업데이트
+            },
+            valueRange = 0f..1f, // 볼륨 범위 (0 ~ 1)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        )
+
+        Text(
+            text = "Current Volume: ${(volume * 100).toInt()}%",
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }
