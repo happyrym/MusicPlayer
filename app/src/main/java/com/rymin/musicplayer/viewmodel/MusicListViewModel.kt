@@ -42,6 +42,10 @@ class MusicListViewModel(application: Application) : ViewModel() {
     private val _currentPosition = MutableStateFlow(0f)
     val currentPosition: StateFlow<Float> get() = _currentPosition
 
+    private val _isLoop = MutableStateFlow(false)
+    val isLoop: StateFlow<Boolean> get() = _isLoop
+
+
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> get() = _isPlaying
 
@@ -81,6 +85,11 @@ class MusicListViewModel(application: Application) : ViewModel() {
         viewModelScope.launch {
             service.currentMusic.collect { music ->
                 _currentMusic.value = music
+            }
+        }
+        viewModelScope.launch {
+            service.isLoop.collect { isLoop ->
+                _isLoop.value = isLoop
             }
         }
     }
@@ -262,6 +271,10 @@ class MusicListViewModel(application: Application) : ViewModel() {
 
     fun playPrevMusic() {
         musicPlayerService?.playPrevMusic()
+    }
+
+    fun changeLoopMode() {
+        musicPlayerService?.changeLoopMode()
     }
 
     fun bindToService(context: Context) {

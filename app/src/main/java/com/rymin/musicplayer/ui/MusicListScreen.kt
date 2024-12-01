@@ -23,7 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -48,6 +50,7 @@ fun MusicListScreen(
     val duration by viewModel.duration.collectAsState()
     val selectedAlbum by viewModel.selectedAlbum.collectAsState()
     val albumList by viewModel.albumList.collectAsState()
+    val isLoop by viewModel.isLoop.collectAsState()
 
     var sliderPosition by remember { mutableStateOf(currentPosition) }
 
@@ -102,10 +105,12 @@ fun MusicListScreen(
                 currentPosition = currentPosition,
                 duration = duration,
                 isPlaying = isPlaying,
+                isLoop = isLoop,
                 onPlayPauseClick = viewModel::playOrPauseMusic,
                 onSeek = viewModel::seekToPosition,
                 onNextClick = viewModel::playNextMusic,
-                onPrevClick = viewModel::playPrevMusic
+                onPrevClick = viewModel::playPrevMusic,
+                onLoopClick = viewModel::changeLoopMode
             )
         }
     }
@@ -238,10 +243,12 @@ fun MusicPlayerControls(
     currentPosition: Float,
     duration: Float,
     isPlaying: Boolean,
+    isLoop: Boolean,
     onPlayPauseClick: () -> Unit,
     onSeek: (Float) -> Unit,
     onNextClick: () -> Unit,
-    onPrevClick: () -> Unit
+    onPrevClick: () -> Unit,
+    onLoopClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -280,7 +287,24 @@ fun MusicPlayerControls(
             Button(onClick = { onNextClick() }) {
                 Text("next")
             }
+            LoopButton(isLoop, onClick = { onLoopClick() })
         }
     }
 
+}
+
+@Composable
+fun LoopButton(isLoop: Boolean, onClick: () -> Unit) {
+    IconButton(
+        onClick = { onClick() },
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Image(
+            modifier = Modifier.size(24.dp),
+            painter = painterResource(id = R.drawable.ic_btn_loop),
+            contentScale = ContentScale.Fit,
+            contentDescription = "Loop Button",
+            colorFilter = if (!isLoop) ColorFilter.tint(Color.Gray) else null,
+        )
+    }
 }
