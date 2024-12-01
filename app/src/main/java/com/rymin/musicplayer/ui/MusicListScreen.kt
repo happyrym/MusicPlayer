@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -283,15 +282,42 @@ fun MusicPlayerControls(
         Spacer(modifier = Modifier.height(8.dp))
 
         Row {
-            ShuffleButon(isShuffle, onClick = { onShuffleClick() })
-            Button(onClick = { onPrevClick() }) {
-                Text("prev")
+            ShuffleButton(isShuffle, onClick = { onShuffleClick() })
+            IconButton(
+                onClick = { onPrevClick() },
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Image(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = R.drawable.ic_btn_prev),
+                    contentScale = ContentScale.Fit,
+                    contentDescription = "Prev Button",
+                    colorFilter = if (!isShuffle) ColorFilter.tint(Color.Gray) else null,
+                )
             }
-            Button(onClick = { onPlayPauseClick() }) {
-                Text(if (isPlaying) "Pause" else "Play")
+            IconButton(
+                onClick = { onPlayPauseClick() },
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Image(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id =if (isPlaying) R.drawable.ic_btn_pause else R.drawable.ic_btn_play),
+                    contentScale = ContentScale.Fit,
+                    contentDescription = "Prev Button",
+                    colorFilter = if (!isShuffle) ColorFilter.tint(Color.Gray) else null,
+                )
             }
-            Button(onClick = { onNextClick() }) {
-                Text("next")
+            IconButton(
+                onClick = { onNextClick() },
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Image(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = R.drawable.ic_btn_next),
+                    contentScale = ContentScale.Fit,
+                    contentDescription = "Prev Button",
+                    colorFilter = if (!isShuffle) ColorFilter.tint(Color.Gray) else null,
+                )
             }
             LoopButton(isLoop, onClick = { onLoopClick() })
         }
@@ -299,7 +325,7 @@ fun MusicPlayerControls(
 
 }
 @Composable
-fun ShuffleButon(isShuffle: Boolean, onClick: () -> Unit) {
+fun ShuffleButton(isShuffle: Boolean, onClick: () -> Unit) {
     IconButton(
         onClick = { onClick() },
         modifier = Modifier.padding(8.dp)
