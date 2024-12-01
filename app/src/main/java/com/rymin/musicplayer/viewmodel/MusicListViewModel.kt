@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class MusicListViewModel(application: Application) : ViewModel() {
     private val appContext = application.applicationContext
@@ -77,6 +78,11 @@ class MusicListViewModel(application: Application) : ViewModel() {
                 _isPlaying.value = isPlaying
             }
         }
+        viewModelScope.launch {
+            service.currentMusic.collect { music ->
+                _currentMusic.value = music
+            }
+        }
     }
 
     fun unbindService() {
@@ -86,6 +92,7 @@ class MusicListViewModel(application: Application) : ViewModel() {
 
     private fun fetchMusicList() {
         viewModelScope.launch {
+            Timber.d("rymins fetch")
             _musicList.value = getMusicList()
             _albumList.value = getAlbumList()
         }
@@ -173,18 +180,23 @@ class MusicListViewModel(application: Application) : ViewModel() {
             musicList
         }
     }
+
     fun showAlbumList() {
         _selectedAlbum.value = null
     }
+
     fun selectedAlbum(album: Album) {
         _selectedAlbum.value = album // 선택된 앨범 상태 업데이트
         viewModelScope.launch {
+            Timber.d("rymins selsecalbum")
             _musicList.value = getMusicListByAlbum(album.id) // 앨범 ID로 음악 목록 로드
         }
     }
+
     private suspend fun getMusicListByAlbum(albumId: Long): List<Music> {
         return withContext(Dispatchers.IO) {
             val musicList = mutableListOf<Music>()
+            Timber.d("rymins here1")
             val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             val projection = arrayOf(
                 MediaStore.Audio.Media._ID,
@@ -230,18 +242,26 @@ class MusicListViewModel(application: Application) : ViewModel() {
         startMusicService(appContext)
         bindToService(appContext)
         viewModelScope.launch {
-            delay(500) // 바인딩이 완료될 때까지 기다림
+            //bind 시간 대기
+            delay(200)
+            Timber.d("rymins _musicList.value: ${_musicList.value}")
+            musicPlayerService?.setPlaylist(_musicList.value, music)
             musicPlayerService?.playMusic(music)
-            _currentMusic.value = music
             _duration.value = musicPlayerService?.getDuration()?.toFloat() ?: 0f
             _isPlaying.value = true
-        }
-        viewModelScope.launch {
-            while (true) {
+            while (_isPlaying.value) {
                 _currentPosition.value = musicPlayerService?.getCurrentPosition()?.toFloat() ?: 0f
                 delay(500)
             }
         }
+    }
+
+    fun playNextMusic() {
+        musicPlayerService?.playNextMusic()
+    }
+
+    fun playPrevMusic() {
+        musicPlayerService?.playPrevMusic()
     }
 
     fun bindToService(context: Context) {
@@ -256,7 +276,6 @@ class MusicListViewModel(application: Application) : ViewModel() {
         } else {
             musicPlayerService?.resumeMusic()
         }
-        _isPlaying.value = !_isPlaying.value
     }
 
     fun seekToPosition(position: Float) {
@@ -270,13 +289,13 @@ class MusicListViewModel(application: Application) : ViewModel() {
     }
 
 
-    fun startMusicService(context: Context) {
+    private fun startMusicService(context: Context) {
         val intent = Intent(Constants.ACTION_START_FOREGROUND)
         intent.setPackage(context.packageName)
         context.sendBroadcast(intent)
     }
 
-    fun stopMusicService(context: Context) {
+    private fun stopMusicService(context: Context) {
         val intent = Intent(Constants.ACTION_STOP_FOREGROUND)
         intent.setPackage(context.packageName)
         context.sendBroadcast(intent)

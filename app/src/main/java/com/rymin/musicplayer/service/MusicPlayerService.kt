@@ -14,6 +14,7 @@ import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.rymin.musicplayer.R
@@ -29,11 +30,20 @@ class MusicPlayerService : Service() {
 
     private val binder = MusicPlayerBinder()
     private var mediaPlayer: MediaPlayer? = null
-    private var currentMusic: Music? = null
+
+    private val _currentMusic = MutableStateFlow(null as Music?)
+    val currentMusic: StateFlow<Music?> get() = _currentMusic
+
+    private val _isLoop = MutableStateFlow(false)
+    val isLoop: StateFlow<Boolean> get() = _isLoop
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> get() = _isPlaying
+
     private lateinit var mediaSession: MediaSessionCompat
+
+    private val playlist = mutableListOf<Music>()
+    private var currentIndex = -1
 
     inner class MusicPlayerBinder : Binder() {
         fun getService(): MusicPlayerService = this@MusicPlayerService
@@ -78,8 +88,9 @@ class MusicPlayerService : Service() {
         when (intent?.action) {
             Constants.ACTION_START_FOREGROUND -> {
                 val notification = createNotification(isPlaying = true)
-                startForeground(Constants.NOTIFICATION_ID, notification)
+                startForeground(NOTIFICATION_ID, notification)
             }
+
             Constants.ACTION_PLAY -> resumeMusic()
             Constants.ACTION_PAUSE -> pauseMusic()
             Constants.ACTION_STOP_FOREGROUND -> stopForegroundService()
@@ -121,9 +132,9 @@ class MusicPlayerService : Service() {
         val playPausePendingIntent = createPendingIntent(
             if (isPlaying) Constants.ACTION_PAUSE else Constants.ACTION_PLAY
         )
-        val sufflePendingIntent = createPendingIntent(Constants.ACTION_SUFFLE  )
+        val sufflePendingIntent = createPendingIntent(Constants.ACTION_SUFFLE)
 
-        val builder = NotificationCompat.Builder(this, Constants.NOTIFICATION_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Music Player")
             .setContentText(if (isPlaying) "Now playing..." else "No music playing")
             .setSmallIcon(R.drawable.ic_btn_list)
@@ -172,13 +183,12 @@ class MusicPlayerService : Service() {
     }
 
     fun playMusic(music: Music) {
-        Timber.d("[Service] playMusic")
-        if (currentMusic?.filePath == music.filePath && mediaPlayer?.isPlaying == true) {
+        Timber.d("[Service] playMusic Music ${music.title}")
+        if (currentMusic.value?.filePath == music.filePath && mediaPlayer?.isPlaying == true) {
             return
         }
         stopMusic()
-
-        currentMusic = music
+        _currentMusic.value = music
         mediaPlayer = MediaPlayer().apply {
             updateMediaMetadata(music)
             setDataSource(applicationContext, Uri.parse(music.filePath))
@@ -190,6 +200,7 @@ class MusicPlayerService : Service() {
     }
 
     fun pauseMusic() {
+        Timber.d("rymins service: pause")
         mediaPlayer?.pause()
         _isPlaying.value = false
         updateNotification(false)
@@ -199,6 +210,68 @@ class MusicPlayerService : Service() {
         mediaPlayer?.start()
         _isPlaying.value = true
         updateNotification(true)
+    }
+
+    fun setPlaylist(musicList: List<Music>, selectedMusic: Music? = null) {
+        playlist.clear()
+        playlist.addAll(musicList)
+        Timber.d("rymins setplay")
+
+        selectedMusic?.let {
+            selectMusic(it)
+        } ?: run {
+            Timber.d("rymins current: set0")
+            currentIndex = 0
+        }
+    }
+
+    private fun selectMusic(music: Music) {
+        val index = playlist.indexOfFirst { it.id == music.id }
+        if (index != -1) {
+            Timber.d("rymins index: $index")
+            currentIndex = index
+        } else {
+            Timber.e("Music not found in playlist")
+        }
+    }
+
+    fun playNextMusic() {
+        if (playlist.isNotEmpty()) {
+            if (_isLoop.value) {
+                currentIndex = (currentIndex + 1) % playlist.size // 다음 곡으로 순환
+            } else {
+                if (currentIndex + 1 >= playlist.size) {
+                    Toast.makeText(this, "다음곡이 없습니다.", Toast.LENGTH_SHORT).show()
+                } else {
+                    currentIndex = (currentIndex + 1) % playlist.size
+                }
+            }
+            val nextMusic = playlist[currentIndex]
+            playMusic(nextMusic)
+        } else {
+            Toast.makeText(this, "플레이 리스트가 비어있습니다.", Toast.LENGTH_SHORT).show()
+            Timber.d("Playlist is empty")
+        }
+    }
+
+    fun playPrevMusic() {
+        if (playlist.isNotEmpty()) {
+            if (_isLoop.value) {
+                currentIndex =
+                    if (currentIndex - 1 < 0) playlist.size - 1 else currentIndex - 1 // 이전 곡으로 순환
+            } else {
+                if (currentIndex - 1 < 0) {
+                    Toast.makeText(this, "이전곡이 없습니다.", Toast.LENGTH_SHORT).show()
+                } else {
+                    currentIndex = currentIndex - 1 // 이전 곡으로 순환
+                }
+            }
+            val prevMusic = playlist[currentIndex]
+            playMusic(prevMusic)
+        } else {
+            Toast.makeText(this, "플레이 리스트가 비어있습니다.", Toast.LENGTH_SHORT).show()
+            Timber.d("Playlist is empty")
+        }
     }
 
     private fun updateNotification(isPlaying: Boolean) {
@@ -211,9 +284,8 @@ class MusicPlayerService : Service() {
     private fun stopMusic() {
         mediaPlayer?.stop()
         mediaPlayer?.release()
-//        stopForeground(STOP_FOREGROUND_REMOVE) // Foreground Service에서 Notification 제거
-        NotificationManagerCompat.from(this).cancel(NOTIFICATION_ID) // Notification 제거
-
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        NotificationManagerCompat.from(this).cancel(NOTIFICATION_ID)
         mediaPlayer = null
     }
 

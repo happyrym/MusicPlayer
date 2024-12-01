@@ -64,11 +64,16 @@ fun MusicListScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
         if (selectedAlbum == null) {
-            AlbumGridView(albumList,
-                onAlbumClick = { album ->
-                    viewModel.selectedAlbum(album)
-                })
-        }else{
+            Box(
+                Modifier
+                    .weight(1f)
+            ) {
+                AlbumGridView(albumList,
+                    onAlbumClick = { album ->
+                        viewModel.selectedAlbum(album)
+                    })
+            }
+        } else {
             IconButton(
                 onClick = { viewModel.showAlbumList() },
                 modifier = Modifier.padding(8.dp)
@@ -98,7 +103,9 @@ fun MusicListScreen(
                 duration = duration,
                 isPlaying = isPlaying,
                 onPlayPauseClick = viewModel::playOrPauseMusic,
-                onSeek = viewModel::seekToPosition
+                onSeek = viewModel::seekToPosition,
+                onNextClick = viewModel::playNextMusic,
+                onPrevClick = viewModel::playPrevMusic
             )
         }
     }
@@ -116,6 +123,7 @@ fun MusicItem(music: Music, onClick: () -> Unit) {
         Text(text = music.artist, style = MaterialTheme.typography.bodySmall)
     }
 }
+
 @Composable
 fun AlbumGridView(albums: List<Album>, onAlbumClick: (Album) -> Unit) {
 
@@ -128,8 +136,9 @@ fun AlbumGridView(albums: List<Album>, onAlbumClick: (Album) -> Unit) {
         }
     }
 }
+
 @Composable
-fun AlbumItem(album: Album,onAlbumClick: (Album) -> Unit) {
+fun AlbumItem(album: Album, onAlbumClick: (Album) -> Unit) {
     Column(
         modifier = Modifier
             .padding(8.dp)
@@ -222,6 +231,7 @@ fun getAlbumArt(context: Context, albumId: Long): Any? {
         getLegacyAlbumArtUri(context, albumId)
     }
 }
+
 @Composable
 fun MusicPlayerControls(
     musicTitle: String,
@@ -229,7 +239,9 @@ fun MusicPlayerControls(
     duration: Float,
     isPlaying: Boolean,
     onPlayPauseClick: () -> Unit,
-    onSeek: (Float) -> Unit
+    onSeek: (Float) -> Unit,
+    onNextClick: () -> Unit,
+    onPrevClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -248,14 +260,26 @@ fun MusicPlayerControls(
         )
 
         Text(
-            text = "${TimeUtils.formatTime(currentPosition.toLong())} / ${TimeUtils.formatTime(duration.toLong())}",
+            text = "${TimeUtils.formatTime(currentPosition.toLong())} / ${
+                TimeUtils.formatTime(
+                    duration.toLong()
+                )
+            }",
             style = MaterialTheme.typography.bodySmall
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(onClick = { onPlayPauseClick() }) {
-            Text(if (isPlaying) "Pause" else "Play")
+        Row {
+            Button(onClick = { onPrevClick() }) {
+                Text("prev")
+            }
+            Button(onClick = { onPlayPauseClick() }) {
+                Text(if (isPlaying) "Pause" else "Play")
+            }
+            Button(onClick = { onNextClick() }) {
+                Text("next")
+            }
         }
     }
 
