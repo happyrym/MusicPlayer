@@ -44,11 +44,12 @@ object Dependency {
         const val coilCompose = "io.coil-kt:coil-compose:2.4.0"
     }
 
-object Module {
+    object Module {
         const val service = ":service"
         const val commonData = ":common_data"
         const val commonUtils = ":common_utils"
         const val commonConfig = ":common_config"
+        const val commonUI = ":common_ui"
     }
 
 }

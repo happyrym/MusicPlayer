@@ -1,4 +1,4 @@
-package com.rymin.musicplayer.service
+package com.rymin.service
 
 import android.app.Notification
 import android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE
@@ -32,8 +32,7 @@ import com.rymin.common.config.Constants.NOTIFICATION_CHANNEL_ID
 import com.rymin.common.config.Constants.NOTIFICATION_CHANNEL_NAME
 import com.rymin.common.config.Constants.NOTIFICATION_ID
 import com.rymin.common.data.Music
-import com.rymin.musicplayer.MainActivity
-import com.rymin.musicplayer.R
+import com.rymin.common.ui.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
@@ -147,8 +146,8 @@ class MusicPlayerService : Service() {
     }
 
     private fun createNotification(): Notification {
-        val notificationIntent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val notificationIntent = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
         val pendingIntent = PendingIntent.getActivity(

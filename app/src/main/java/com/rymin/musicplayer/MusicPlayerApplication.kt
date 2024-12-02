@@ -2,7 +2,6 @@ package com.rymin.musicplayer
 
 import android.app.Application
 import android.content.IntentFilter
-import android.util.Log
 import com.rymin.common.config.Constants
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
