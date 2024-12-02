@@ -1,6 +1,5 @@
 package com.rymin.musicplayer.viewmodel
 
-import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -12,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rymin.musicplayer.data.Album
 import com.rymin.musicplayer.data.Music
+import com.rymin.musicplayer.repository.MusicRepository
 import com.rymin.musicplayer.service.MusicPlayerService
 import com.rymin.musicplayer.utils.Constants
 import kotlinx.coroutines.Dispatchers
@@ -22,8 +22,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-class MusicListViewModel(application: Application) : ViewModel() {
-    private val appContext = application.applicationContext
+class MusicListViewModel(
+    private val appContext: Context,
+    private val musicRepository: MusicRepository
+) : ViewModel() {
 
     private val _musicList = MutableStateFlow<List<Music>>(emptyList())
     val musicList: StateFlow<List<Music>> get() = _musicList
@@ -84,7 +86,7 @@ class MusicListViewModel(application: Application) : ViewModel() {
         viewModelScope.launch {
             service.isPlaying.collect { isPlaying ->
                 _isPlaying.value = isPlaying
-                if(_isPlaying.value){
+                if (_isPlaying.value) {
                     updateSlider()
                 }
             }
@@ -113,97 +115,11 @@ class MusicListViewModel(application: Application) : ViewModel() {
 
     private fun fetchMusicList() {
         viewModelScope.launch {
-            _musicList.value = getMusicList()
-            _albumList.value = getAlbumList()
+            _musicList.value = musicRepository.getMusicList()
+            _albumList.value = musicRepository.getAlbumList()
         }
     }
 
-    private suspend fun getAlbumList(): List<Album> {
-        return withContext(Dispatchers.IO) {
-            val albumList = mutableListOf<Album>()
-            val albumUri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI
-            val projection = arrayOf(
-                MediaStore.Audio.Albums._ID,
-                MediaStore.Audio.Albums.ALBUM,
-                MediaStore.Audio.Albums.ARTIST,
-                MediaStore.Audio.Albums.NUMBER_OF_SONGS,
-            )
-
-            val cursor = appContext.contentResolver.query(
-                albumUri,
-                projection,
-                null,
-                null,
-                "${MediaStore.Audio.Albums.ALBUM} ASC"
-            )
-
-            cursor?.use {
-                val idIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Albums._ID)
-                val albumIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Albums.ALBUM)
-                val artistIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Albums.ARTIST)
-                val numberOfSongsIndex =
-                    it.getColumnIndexOrThrow(MediaStore.Audio.Albums.NUMBER_OF_SONGS)
-
-                while (it.moveToNext()) {
-                    albumList.add(
-                        Album(
-                            id = it.getLong(idIndex),
-                            title = it.getString(albumIndex),
-                            artist = it.getString(artistIndex),
-                            numberOfSongs = it.getInt(numberOfSongsIndex),
-                        )
-                    )
-                }
-            }
-            albumList
-        }
-    }
-
-    private suspend fun getMusicList(): List<Music> {
-        return withContext(Dispatchers.IO) {
-            val musicList = mutableListOf<Music>()
-            val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            val projection = arrayOf(
-                MediaStore.Audio.Media._ID,
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.DURATION,
-                MediaStore.Audio.Media.DATA,
-                MediaStore.Audio.Media.ALBUM_ID
-            )
-            val cursor = appContext.contentResolver.query(
-                musicUri,
-                projection,
-                "${MediaStore.Audio.Media.IS_MUSIC} != 0",
-                null,
-                "${MediaStore.Audio.Media.TITLE} ASC"
-            )
-
-            cursor?.use {
-                val idIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-                val titleIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-                val artistIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
-                val durationIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-                val dataIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
-                val albumIdIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
-
-
-                while (it.moveToNext()) {
-                    musicList.add(
-                        Music(
-                            id = it.getLong(idIndex),
-                            title = it.getString(titleIndex),
-                            artist = it.getString(artistIndex),
-                            duration = it.getLong(durationIndex),
-                            filePath = it.getString(dataIndex),
-                            albumId = it.getLong(albumIdIndex),
-                        )
-                    )
-                }
-            }
-            musicList
-        }
-    }
 
     fun showAlbumList() {
         _selectedAlbum.value = null
@@ -212,52 +128,7 @@ class MusicListViewModel(application: Application) : ViewModel() {
     fun selectedAlbum(album: Album) {
         _selectedAlbum.value = album // 선택된 앨범 상태 업데이트
         viewModelScope.launch {
-            _musicList.value = getMusicListByAlbum(album.id) // 앨범 ID로 음악 목록 로드
-        }
-    }
-
-    private suspend fun getMusicListByAlbum(albumId: Long): List<Music> {
-        return withContext(Dispatchers.IO) {
-            val musicList = mutableListOf<Music>()
-            val musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            val projection = arrayOf(
-                MediaStore.Audio.Media._ID,
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.DURATION,
-                MediaStore.Audio.Media.DATA
-            )
-            val selection = "${MediaStore.Audio.Media.ALBUM_ID} = ?"
-            val selectionArgs = arrayOf(albumId.toString())
-            val cursor = appContext.contentResolver.query(
-                musicUri,
-                projection,
-                selection,
-                selectionArgs,
-                "${MediaStore.Audio.Media.TITLE} ASC"
-            )
-
-            cursor?.use {
-                val idIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-                val titleIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-                val artistIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
-                val durationIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-                val dataIndex = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
-
-                while (it.moveToNext()) {
-                    musicList.add(
-                        Music(
-                            id = it.getLong(idIndex),
-                            title = it.getString(titleIndex),
-                            artist = it.getString(artistIndex),
-                            duration = it.getLong(durationIndex),
-                            filePath = it.getString(dataIndex),
-                            albumId = albumId,
-                        )
-                    )
-                }
-            }
-            musicList
+            _musicList.value = musicRepository.getMusicListByAlbum(album.id) // 앨범 ID로 음악 목록 로드
         }
     }
 
@@ -290,7 +161,8 @@ class MusicListViewModel(application: Application) : ViewModel() {
     fun changeLoopMode() {
         musicPlayerService?.changeLoopMode()
     }
-    fun changeShuffleMode(){
+
+    fun changeShuffleMode() {
         musicPlayerService?.changeShuffleMode()
     }
 
@@ -307,7 +179,8 @@ class MusicListViewModel(application: Application) : ViewModel() {
             musicPlayerService?.resumeMusic()
         }
     }
-     private fun updateSlider(){
+
+    private fun updateSlider() {
         viewModelScope.launch {
             while (_isPlaying.value) {
                 _currentPosition.value =
@@ -331,16 +204,17 @@ class MusicListViewModel(application: Application) : ViewModel() {
         val audioManager = appContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
         val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        _volume.value =  currentVolume / maxVolume.toFloat()
+        _volume.value = currentVolume / maxVolume.toFloat()
     }
 
     fun setVolume(volume: Float) {
         val audioManager = appContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         val newVolume = (volume * maxVolume).toInt()
-        _volume.value =  volume
+        _volume.value = volume
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
     }
+
     private fun startMusicService(context: Context) {
         val intent = Intent(Constants.ACTION_START_FOREGROUND)
         intent.setPackage(context.packageName)
