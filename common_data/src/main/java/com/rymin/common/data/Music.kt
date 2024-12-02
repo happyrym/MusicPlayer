@@ -1,4 +1,4 @@
-package com.rymin.musicplayer.data
+package com.rymin.common.data
 
 data class Music(
     val id: Long,

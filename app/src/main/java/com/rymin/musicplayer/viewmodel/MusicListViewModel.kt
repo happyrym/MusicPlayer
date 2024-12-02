@@ -8,8 +8,8 @@ import android.media.AudioManager
 import android.os.IBinder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rymin.musicplayer.data.Album
-import com.rymin.musicplayer.data.Music
+import com.rymin.common.data.Album
+import com.rymin.common.data.Music
 import com.rymin.musicplayer.repository.MusicRepository
 import com.rymin.musicplayer.service.MusicPlayerService
 import com.rymin.musicplayer.utils.Constants

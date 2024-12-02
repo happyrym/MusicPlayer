@@ -94,4 +94,7 @@ dependencies {
     Dependency.KotlinX.run {
         implementation(coroutinesAndroid)
     }
+    Dependency.Module.run {
+        implementation(project(commonData))
+    }
 }

@@ -20,9 +20,9 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.media.session.MediaButtonReceiver
+import com.rymin.common.data.Music
 import com.rymin.musicplayer.MainActivity
 import com.rymin.musicplayer.R
-import com.rymin.musicplayer.data.Music
 import com.rymin.musicplayer.utils.Constants.ACTION_LOOP
 import com.rymin.musicplayer.utils.Constants.ACTION_NEXT
 import com.rymin.musicplayer.utils.Constants.ACTION_PAUSE
