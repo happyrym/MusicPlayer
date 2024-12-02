@@ -96,5 +96,6 @@ dependencies {
     }
     Dependency.Module.run {
         implementation(project(commonData))
+        implementation(project(commonUtils))
     }
 }

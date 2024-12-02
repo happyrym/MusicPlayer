@@ -33,8 +33,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.rymin.common.data.Album
 import com.rymin.common.data.Music
+import com.rymin.common.utils.TimeUtils
 import com.rymin.musicplayer.R
-import com.rymin.musicplayer.utils.TimeUtils
 import com.rymin.musicplayer.viewmodel.MusicListViewModel
 
 @Composable

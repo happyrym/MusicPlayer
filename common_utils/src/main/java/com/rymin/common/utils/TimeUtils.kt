@@ -1,4 +1,4 @@
-package com.rymin.musicplayer.utils
+package com.rymin.common.utils
 
 object TimeUtils {
     /**
