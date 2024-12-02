@@ -23,3 +23,4 @@ rootProject.name = "MusicPlayer"
 include(":app")
 include(":common_data")
 include(":common_utils")
+include(":common_config")

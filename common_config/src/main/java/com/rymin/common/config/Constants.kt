@@ -1,4 +1,4 @@
-package com.rymin.musicplayer.utils
+package com.rymin.common.config
 
 object Constants {
     const val NOTIFICATION_CHANNEL_ID = "MusicPlayerChannel"

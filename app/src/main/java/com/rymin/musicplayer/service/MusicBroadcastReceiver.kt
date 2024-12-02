@@ -3,7 +3,7 @@ package com.rymin.musicplayer.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.rymin.musicplayer.utils.Constants
+import com.rymin.common.config.Constants
 import timber.log.Timber
 
 class MusicBroadcastReceiver : BroadcastReceiver() {
