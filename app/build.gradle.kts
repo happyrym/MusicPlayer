@@ -1,18 +1,20 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
+    id("com.android.application") version "8.5.2"
+    id("org.jetbrains.kotlin.android") version "1.9.0"
 }
 
 android {
     namespace = "com.rymin.musicplayer"
-    compileSdk = 35
+    compileSdk = AppConfig.targetSdk
+
 
     defaultConfig {
-        applicationId = "com.rymin.musicplayer"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        minSdk = AppConfig.minSdk
+        targetSdk = AppConfig.targetSdk
+        versionCode = AppConfig.MUSICPLAYER.versionCode
+        versionName = AppConfig.MUSICPLAYER.fixedVersionName
+        applicationId = AppConfig.MUSICPLAYER.applicationId
+
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -51,46 +53,51 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    Dependency.AndroidX.run {
+        implementation(coreKtx)
+        implementation(lifecycleRuntimeKtx)
+        implementation(activityCompose)
+        implementation(datastorePreferences)
+        implementation(workRuntimeKtx)
+    }
+    Dependency.AndroidX.Compose.run {
+        implementation(platform(bom))
+        androidTestImplementation(platform(bom))
+        androidTestImplementation(uiTestJUnit4)
+        debugImplementation(uiTooling)
+        debugImplementation(uiTestManifest)
+        implementation(ui)
+        implementation(uiToolingPreview)
+        implementation(material3)
+        implementation(uiGraphics)
+    }
+    Dependency.Testing.run {
+        testImplementation(junit)
+        androidTestImplementation(androidJunit)
+        androidTestImplementation(espressoCore)
+    }
 
-    // Log library
-    implementation(libs.timber)
+    Dependency.Utils.run {
+        implementation(timber)
+        implementation(coilCompose)
+    }
 
-    // Koin for Di
-    implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
+    Dependency.Koin.run {
+        implementation(android)
+        implementation(androidxCompose)
+    }
 
-    // ExoPlayer for music play
-    implementation(libs.exoplayer)
-
-    // Image loading
-    implementation(libs.coil.compose) // Coil for Compose
-
-    // Coroutine and Flow
-    implementation(libs.kotlinx.coroutines.android)
-
-    // Permissions (Compose-friendly)
-    implementation(libs.accompanist.permissions)
-
-    // DataStore for preferences
-    implementation(libs.androidx.datastore.preferences)
-
-    // Notifications and WorkManager
-    implementation(libs.androidx.work.runtime.ktx)
-
-    implementation( libs.androidx.core.ktx.v1101)
+    Dependency.Google.run {
+        implementation(accompanistPermissions)
+        implementation(exoplayer)
+    }
+    Dependency.KotlinX.run {
+        implementation(coroutinesAndroid)
+    }
+    Dependency.Module.run {
+        implementation(project(service))
+        implementation(project(commonData))
+        implementation(project(commonUtils))
+        implementation(project(commonConfig))
+    }
 }

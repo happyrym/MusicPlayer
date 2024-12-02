@@ -8,13 +8,12 @@ import android.media.AudioManager
 import android.os.IBinder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rymin.musicplayer.data.Album
-import com.rymin.musicplayer.data.Music
+import com.rymin.common.config.Constants
+import com.rymin.common.data.Album
+import com.rymin.common.data.Music
 import com.rymin.musicplayer.repository.MusicRepository
-import com.rymin.musicplayer.service.MusicPlayerService
-import com.rymin.musicplayer.utils.Constants
+import com.rymin.service.MusicPlayerService
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -113,6 +112,7 @@ class MusicListViewModel(
 
     fun unbindService() {
         musicPlayerService = null
+        if(isServiceBound)
         appContext.unbindService(serviceConnection)
     }
 
@@ -142,8 +142,8 @@ class MusicListViewModel(
     }
 
     fun playMusic(music: Music) {
-        startMusicService(appContext)
-        bindToService(appContext)
+        startMusicService()
+        bindToService()
         viewModelScope.launch {
             flow {
                 // Service 바인딩 후 지연 시간
@@ -180,14 +180,14 @@ class MusicListViewModel(
         musicPlayerService?.changeShuffleMode()
     }
 
-    fun bindToService(context: Context) {
-        val intent = Intent(context, MusicPlayerService::class.java)
-        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+    fun bindToService() {
+        val intent = Intent(appContext, MusicPlayerService::class.java)
+        appContext.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
     fun playOrPauseMusic() {
         if (_isPlaying.value) {
-            stopMusicService(appContext)
+            stopMusicService()
             musicPlayerService?.pauseMusic()
         } else {
             musicPlayerService?.resumeMusic()
@@ -225,16 +225,16 @@ class MusicListViewModel(
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
     }
 
-    private fun startMusicService(context: Context) {
+    private fun startMusicService() {
         val intent = Intent(Constants.ACTION_START_FOREGROUND)
-        intent.setPackage(context.packageName)
-        context.sendBroadcast(intent)
+        intent.setPackage(appContext.packageName)
+        appContext.sendBroadcast(intent)
     }
 
-    private fun stopMusicService(context: Context) {
+    private fun stopMusicService() {
         val intent = Intent(Constants.ACTION_STOP_FOREGROUND)
-        intent.setPackage(context.packageName)
-        context.sendBroadcast(intent)
+        intent.setPackage(appContext.packageName)
+        appContext.sendBroadcast(intent)
     }
 
 }

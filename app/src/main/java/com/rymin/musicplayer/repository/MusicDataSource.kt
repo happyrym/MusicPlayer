@@ -2,8 +2,8 @@ package com.rymin.musicplayer.repository
 
 import android.content.Context
 import android.provider.MediaStore
-import com.rymin.musicplayer.data.Album
-import com.rymin.musicplayer.data.Music
+import com.rymin.common.data.Album
+import com.rymin.common.data.Music
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
