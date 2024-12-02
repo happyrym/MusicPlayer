@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.media.AudioManager
 import android.os.IBinder
-import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rymin.musicplayer.data.Album
@@ -14,13 +13,15 @@ import com.rymin.musicplayer.data.Music
 import com.rymin.musicplayer.repository.MusicRepository
 import com.rymin.musicplayer.service.MusicPlayerService
 import com.rymin.musicplayer.utils.Constants
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 class MusicListViewModel(
     private val appContext: Context,
@@ -60,6 +61,8 @@ class MusicListViewModel(
 
     private var isServiceBound = false
 
+    private var musicPlayerService: MusicPlayerService? = null
+
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -79,15 +82,15 @@ class MusicListViewModel(
         fetchMusicList()
     }
 
-    private var musicPlayerService: MusicPlayerService? = null
-
     fun bindService(service: MusicPlayerService) {
         this.musicPlayerService = service
         viewModelScope.launch {
             service.isPlaying.collect { isPlaying ->
                 _isPlaying.value = isPlaying
-                if (_isPlaying.value) {
-                    updateSlider()
+                viewModelScope.launch {
+                    updateSliderFlow().collectLatest { position ->
+                        _currentPosition.value = position
+                    }
                 }
             }
         }
@@ -115,8 +118,12 @@ class MusicListViewModel(
 
     private fun fetchMusicList() {
         viewModelScope.launch {
-            _musicList.value = musicRepository.getMusicList()
-            _albumList.value = musicRepository.getAlbumList()
+            musicRepository.getMusicList().collect {
+                _musicList.value = it
+            }
+            musicRepository.getAlbumList().collect {
+                _albumList.value = it
+            }
         }
     }
 
@@ -128,7 +135,9 @@ class MusicListViewModel(
     fun selectedAlbum(album: Album) {
         _selectedAlbum.value = album // 선택된 앨범 상태 업데이트
         viewModelScope.launch {
-            _musicList.value = musicRepository.getMusicListByAlbum(album.id) // 앨범 ID로 음악 목록 로드
+            musicRepository.getMusicListByAlbum(album.id).collect {
+                _musicList.value = it
+            }
         }
     }
 
@@ -136,16 +145,21 @@ class MusicListViewModel(
         startMusicService(appContext)
         bindToService(appContext)
         viewModelScope.launch {
-            //bind 시간 대기
-            delay(200)
-            Timber.d("rymins _musicList.value: ${_musicList.value}")
-            musicPlayerService?.setPlaylist(_musicList.value, music)
-            musicPlayerService?.playMusic(music)
-            _duration.value = musicPlayerService?.getDuration()?.toFloat() ?: 0f
-            _isPlaying.value = true
-            while (_isPlaying.value) {
-                _currentPosition.value = musicPlayerService?.getCurrentPosition()?.toFloat() ?: 0f
-                delay(500)
+            flow {
+                // Service 바인딩 후 지연 시간
+                delay(200)
+
+                // 플레이리스트 및 음악 재생
+                musicPlayerService?.setPlaylist(_musicList.value, music)
+                musicPlayerService?.playMusic(music)
+
+                _duration.value = musicPlayerService?.getDuration()?.toFloat() ?: 0f
+                _isPlaying.value = true
+                emitAll(updateSliderFlow())
+            }.onStart {
+                _currentPosition.value = 0f
+            }.collectLatest { position ->
+                _currentPosition.value = position
             }
         }
     }
@@ -180,16 +194,12 @@ class MusicListViewModel(
         }
     }
 
-    private fun updateSlider() {
-        viewModelScope.launch {
-            while (_isPlaying.value) {
-                _currentPosition.value =
-                    musicPlayerService?.getCurrentPosition()?.toFloat() ?: 0f
-                delay(500)
-            }
+    private fun updateSliderFlow() = flow {
+        while (_isPlaying.value) {
+            emit(musicPlayerService?.getCurrentPosition()?.toFloat() ?: 0f)
+            delay(500) // 500ms 간격으로 업데이트
         }
     }
-
     fun seekToPosition(position: Float) {
         musicPlayerService?.seekTo(position.toInt())
         _currentPosition.value = position
@@ -226,4 +236,5 @@ class MusicListViewModel(
         intent.setPackage(context.packageName)
         context.sendBroadcast(intent)
     }
+
 }
