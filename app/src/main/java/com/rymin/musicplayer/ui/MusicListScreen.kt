@@ -40,6 +40,7 @@ import com.rymin.musicplayer.viewmodel.MusicListViewModel
 @Composable
 fun MusicListScreen(
     viewModel: MusicListViewModel,
+    loadData: Boolean = false,
     onMusicSelected: (Music) -> Unit
 ) {
     val musicList by viewModel.musicList.collectAsState(emptyList())
@@ -57,6 +58,7 @@ fun MusicListScreen(
     var sliderPosition by remember { mutableStateOf(currentPosition) }
 
     LaunchedEffect(currentPosition) {
+        viewModel.bindToService()
         sliderPosition = currentPosition
     }
 
@@ -144,7 +146,7 @@ fun MusicListScreen(
                         )
                     },
                     volume = volume,
-                    setVolume = { value -> viewModel.setVolume( value) },
+                    setVolume = { value -> viewModel.setVolume(value) },
                     onDismiss = { isBottomSheetVisible = false }
                 )
             }
@@ -257,7 +259,7 @@ fun getThumbnailUri(context: Context, albumId: Long): Bitmap? {
     }
 }
 
-fun getLegacyAlbumArtUri(context: Context, albumId: Long): Uri? {
+fun getLegacyAlbumArtUri(albumId: Long): Uri? {
     val albumUri = ContentUris.withAppendedId(
         Uri.parse("content://media/external/audio/albumart"),
         albumId
@@ -269,7 +271,7 @@ fun getAlbumArt(context: Context, albumId: Long): Any? {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         getThumbnailUri(context, albumId)
     } else {
-        getLegacyAlbumArtUri(context, albumId)
+        getLegacyAlbumArtUri(albumId)
     }
 }
 

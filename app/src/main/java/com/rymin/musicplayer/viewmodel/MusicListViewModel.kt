@@ -112,6 +112,7 @@ class MusicListViewModel(
 
     fun unbindService() {
         musicPlayerService = null
+        if(isServiceBound)
         appContext.unbindService(serviceConnection)
     }
 
@@ -141,8 +142,8 @@ class MusicListViewModel(
     }
 
     fun playMusic(music: Music) {
-        startMusicService(appContext)
-        bindToService(appContext)
+        startMusicService()
+        bindToService()
         viewModelScope.launch {
             flow {
                 // Service 바인딩 후 지연 시간
@@ -179,14 +180,14 @@ class MusicListViewModel(
         musicPlayerService?.changeShuffleMode()
     }
 
-    fun bindToService(context: Context) {
-        val intent = Intent(context, MusicPlayerService::class.java)
-        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+    fun bindToService() {
+        val intent = Intent(appContext, MusicPlayerService::class.java)
+        appContext.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
     fun playOrPauseMusic() {
         if (_isPlaying.value) {
-            stopMusicService(appContext)
+            stopMusicService()
             musicPlayerService?.pauseMusic()
         } else {
             musicPlayerService?.resumeMusic()
@@ -224,16 +225,16 @@ class MusicListViewModel(
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
     }
 
-    private fun startMusicService(context: Context) {
+    private fun startMusicService() {
         val intent = Intent(Constants.ACTION_START_FOREGROUND)
-        intent.setPackage(context.packageName)
-        context.sendBroadcast(intent)
+        intent.setPackage(appContext.packageName)
+        appContext.sendBroadcast(intent)
     }
 
-    private fun stopMusicService(context: Context) {
+    private fun stopMusicService() {
         val intent = Intent(Constants.ACTION_STOP_FOREGROUND)
-        intent.setPackage(context.packageName)
-        context.sendBroadcast(intent)
+        intent.setPackage(appContext.packageName)
+        appContext.sendBroadcast(intent)
     }
 
 }
