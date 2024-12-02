@@ -8,13 +8,12 @@ import android.media.AudioManager
 import android.os.IBinder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rymin.musicplayer.data.Album
-import com.rymin.musicplayer.data.Music
+import com.rymin.common.config.Constants
+import com.rymin.common.data.Album
+import com.rymin.common.data.Music
 import com.rymin.musicplayer.repository.MusicRepository
-import com.rymin.musicplayer.service.MusicPlayerService
-import com.rymin.musicplayer.utils.Constants
+import com.rymin.service.MusicPlayerService
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest

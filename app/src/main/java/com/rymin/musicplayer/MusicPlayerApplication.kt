@@ -2,7 +2,7 @@ package com.rymin.musicplayer
 
 import android.app.Application
 import android.content.IntentFilter
-import android.util.Log
+import com.rymin.common.config.Constants
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -10,7 +10,6 @@ import org.koin.core.logger.Level
 import timber.log.Timber
 import com.rymin.musicplayer.di.modules
 import com.rymin.musicplayer.service.MusicBroadcastReceiver
-import com.rymin.musicplayer.utils.Constants
 
 class MusicPlayerApplication : Application() {
 

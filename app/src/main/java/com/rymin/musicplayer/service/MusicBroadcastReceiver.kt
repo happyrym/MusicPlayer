@@ -3,8 +3,8 @@ package com.rymin.musicplayer.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.rymin.musicplayer.utils.Constants
-import timber.log.Timber
+import com.rymin.common.config.Constants
+import com.rymin.service.MusicPlayerService
 
 class MusicBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
