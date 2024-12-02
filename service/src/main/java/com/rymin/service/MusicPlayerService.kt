@@ -20,6 +20,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.media.session.MediaButtonReceiver
+import com.rymin.common.config.Constants
 import com.rymin.common.config.Constants.ACTION_LOOP
 import com.rymin.common.config.Constants.ACTION_NEXT
 import com.rymin.common.config.Constants.ACTION_PAUSE
@@ -147,7 +148,7 @@ class MusicPlayerService : Service() {
 
     private fun createNotification(): Notification {
         val notificationIntent = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
         val pendingIntent = PendingIntent.getActivity(
