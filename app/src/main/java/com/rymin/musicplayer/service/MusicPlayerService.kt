@@ -11,6 +11,7 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Binder
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
@@ -101,6 +102,11 @@ class MusicPlayerService : Service() {
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
                 }
+
+                override fun onSeekTo(pos: Long) {
+                    super.onSeekTo(pos)
+                    seekTo(pos.toInt())
+                }
             })
             isActive = true
         }
@@ -152,23 +158,26 @@ class MusicPlayerService : Service() {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_btn_list)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
                     .setMediaSession(mediaSession.sessionToken)
             )
             .setContentIntent(pendingIntent)
             .setOngoing(true)
-            .build()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
+        }
+        return builder.build()
     }
 
     private fun updateMediaMetadata(music: Music) {
         val metadata = MediaMetadataCompat.Builder()
-            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, music.title) // 곡 제목
-            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, music.artist) // 아티스트
+            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, music.title)
+            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, music.artist)
+            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, music.duration)
             .build()
 
         mediaSession.setMetadata(metadata)
@@ -218,7 +227,6 @@ class MusicPlayerService : Service() {
             selectMusic(it)
             shufflePlaylist()
         } ?: run {
-            Timber.d("rymins current: set0")
             currentIndex = 0
         }
     }
@@ -226,7 +234,6 @@ class MusicPlayerService : Service() {
     private fun selectMusic(music: Music) {
         val index = playlist.indexOfFirst { it.id == music.id }
         if (index != -1) {
-            Timber.d("rymins index: $index")
             currentIndex = index
         } else {
             Timber.e("Music not found in playlist")
@@ -249,8 +256,7 @@ class MusicPlayerService : Service() {
         if (_isShuffle.value) {
             playlist.shuffle()
         } else {
-            // 셔플 해제 시 원래 순서를 복구하거나 현재 순서를 유지할 수 있습니다.
-            playlist.sortBy { it.title } // 예: ID 순으로 정렬
+            playlist.sortBy { it.title }
         }
         currentIndex = playlist.indexOfFirst { it.id == _currentMusic.value?.id }
         if (currentIndex == -1) {
@@ -261,7 +267,7 @@ class MusicPlayerService : Service() {
     fun playNextMusic(isComplete: Boolean = false) {
         if (playlist.isNotEmpty()) {
             if (_isLoop.value) {
-                currentIndex = (currentIndex + 1) % playlist.size // 다음 곡으로 순환
+                currentIndex = (currentIndex + 1) % playlist.size
             } else {
                 if (currentIndex + 1 >= playlist.size) {
                     Toast.makeText(this, "다음곡이 없습니다.", Toast.LENGTH_SHORT).show()
@@ -316,6 +322,7 @@ class MusicPlayerService : Service() {
 
     fun seekTo(position: Int) {
         mediaPlayer?.seekTo(position)
+        updatePlaybackState()
     }
 
 
@@ -325,13 +332,14 @@ class MusicPlayerService : Service() {
         } else {
             PlaybackStateCompat.STATE_PAUSED
         }
-
+        val currentPosition = (mediaPlayer?.currentPosition ?: 0).toLong()
         mediaSession.setPlaybackState(
             PlaybackStateCompat.Builder()
                 .setActions(
                     PlaybackStateCompat.ACTION_PLAY or
                             PlaybackStateCompat.ACTION_PAUSE or
-                            PlaybackStateCompat.ACTION_STOP
+                            PlaybackStateCompat.ACTION_STOP or
+                            PlaybackStateCompat.ACTION_SEEK_TO
                 )
                 .addCustomAction(ACTION_PREV, ACTION_PREV, R.drawable.ic_btn_prev)
                 .addCustomAction(ACTION_NEXT, ACTION_NEXT, R.drawable.ic_btn_next)
@@ -345,7 +353,9 @@ class MusicPlayerService : Service() {
                     ACTION_SHUFFLE,
                     if (_isShuffle.value) R.drawable.ic_btn_shuffle else R.drawable.ic_btn_shuffle_disable
                 )
-                .setState(state, 0, 1.0f)
+                .setState(
+                    state, currentPosition, if (_isPlaying.value) 1.0f else 0.0f
+                )
                 .build()
         )
     }
