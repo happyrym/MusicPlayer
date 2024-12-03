@@ -1,4 +1,4 @@
-package com.rymin.musicplayer.service
+package com.rymin.core.br
 
 import android.content.BroadcastReceiver
 import android.content.Context
