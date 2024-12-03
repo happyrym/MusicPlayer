@@ -1,4 +1,4 @@
-package com.rymin.musicplayer.repository
+package com.rymin.data.repository
 
 import com.rymin.common.data.Album
 import com.rymin.common.data.Music

@@ -45,7 +45,8 @@ object Dependency {
     }
 
     object Module {
-        const val service = ":service"
+        const val service: String = ":service"
+        const val data = ":data"
         const val commonData = ":common_data"
         const val commonUtils = ":common_utils"
         const val commonConfig = ":common_config"
