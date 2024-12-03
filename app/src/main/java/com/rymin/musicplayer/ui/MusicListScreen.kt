@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,23 +26,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.rymin.common.data.Album
 import com.rymin.common.data.Music
 import com.rymin.common.utils.TimeUtils
-import com.rymin.musicplayer.R
 import com.rymin.common.ui.R as resource
 import com.rymin.musicplayer.viewmodel.MusicListViewModel
 
 @Composable
 fun MusicListScreen(
     viewModel: MusicListViewModel,
-    loadData: Boolean = false,
     onMusicSelected: (Music) -> Unit
 ) {
     val musicList by viewModel.musicList.collectAsState(emptyList())
@@ -56,7 +58,7 @@ fun MusicListScreen(
     val volume by viewModel.volume.collectAsState()
 
     var isBottomSheetVisible by remember { mutableStateOf(false) }
-    var sliderPosition by remember { mutableStateOf(currentPosition) }
+    var sliderPosition by remember { mutableFloatStateOf(currentPosition) }
 
     LaunchedEffect(currentPosition) {
         viewModel.bindToService()
@@ -105,11 +107,18 @@ fun MusicListScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         currentMusic?.let { music ->
-            Box(Modifier
-                .clickable {
-                    viewModel.getVolume()
-                    isBottomSheetVisible = true
-                }) {
+            Box(
+                Modifier
+                    .clickable {
+                        viewModel.getVolume()
+                        isBottomSheetVisible = true
+                    }
+                    .background(
+                        color = Color(0xFFF0F0F0),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .clip(RoundedCornerShape(16.dp))
+            ) {
                 MusicPlayerControls(
                     musicTitle = music.title,
                     artistName = music.artist,
@@ -157,14 +166,24 @@ fun MusicListScreen(
 
 @Composable
 fun MusicItem(music: Music, onClick: () -> Unit) {
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .padding(4.dp)
+            .background(
+                color = Color(0xFFF0F0F0),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .clip(RoundedCornerShape(16.dp))
             .clickable { onClick() }
-            .padding(16.dp)
     ) {
-        Text(text = music.title, style = MaterialTheme.typography.bodyMedium)
-        Text(text = music.artist, style = MaterialTheme.typography.bodySmall)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            Text(text = music.title, style = MaterialTheme.typography.bodyMedium)
+            Text(text = music.artist, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 
@@ -260,7 +279,7 @@ fun getThumbnailUri(context: Context, albumId: Long): Bitmap? {
     }
 }
 
-fun getLegacyAlbumArtUri(albumId: Long): Uri? {
+fun getLegacyAlbumArtUri(albumId: Long): Uri {
     val albumUri = ContentUris.withAppendedId(
         Uri.parse("content://media/external/audio/albumart"),
         albumId
@@ -294,28 +313,43 @@ fun MusicPlayerControls(
 ) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp)
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = " $musicTitle - $artistName", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.height(8.dp))
-
         Slider(
             value = currentPosition,
             valueRange = 0f..duration,
-            onValueChange = { position -> onSeek(position) },
-            modifier = Modifier.fillMaxWidth()
+            onValueChange = onSeek,
+            colors = SliderDefaults.colors(
+                thumbColor = Color(0xFF9F9FD8),
+                activeTrackColor = Color(0xFF9F9FD8),
+                inactiveTrackColor = Color.Gray
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
         )
-
-        Text(
-            text = "${TimeUtils.formatTime(currentPosition.toLong())} / ${
-                TimeUtils.formatTime(
-                    duration.toLong()
-                )
-            }",
-            style = MaterialTheme.typography.bodySmall
-        )
+        Row {
+            Spacer(modifier = Modifier.width(36.dp))
+            Text(
+                text = "${TimeUtils.formatTime(currentPosition.toLong())} / ${
+                    TimeUtils.formatTime(
+                        duration.toLong()
+                    )
+                }",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                progress = { currentPosition / duration },
+                color = Color(0xFF9F9FD8),
+                strokeWidth = 3.dp,
+                trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -357,7 +391,6 @@ fun MusicPlayerControls(
             LoopButton(isLoop, onClick = { onLoopClick() })
         }
     }
-
 }
 
 @Composable
@@ -423,7 +456,7 @@ fun MusicInfoBottomSheet(
                 Box(
                     modifier = Modifier
                         .align(Alignment.Top)
-                        .padding(start = 32.dp)
+                        .padding(start = 42.dp)
                 ) {
                 }
                 Box(
@@ -468,15 +501,17 @@ fun MusicInfoBottomSheet(
                     modifier = Modifier
                         .align(Alignment.Top)
                         .padding(end = 8.dp)
+                        .clip(
+                            RoundedCornerShape(50)
+                        )
+                        .clickable { onDismiss() }
+                        .size(36.dp)
                 ) {
-                    Button(
-                        onClick = { onDismiss() },
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50))
-                            .size(36.dp)
-                    ) {
-                        Text(text = "X")
-                    }
+                    Text(
+                        modifier = Modifier.align(Alignment.Center),
+                        text = "X",
+                        fontSize = 16.sp
+                    )
                 }
             }
             VolumeController(volume, setVolume)
@@ -502,9 +537,9 @@ fun VolumeController(
         Slider(
             value = volume,
             onValueChange = { newValue ->
-                setVolume(newValue) // 볼륨 값 업데이트
+                setVolume(newValue)
             },
-            valueRange = 0f..1f, // 볼륨 범위 (0 ~ 1)
+            valueRange = 0f..1f,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
