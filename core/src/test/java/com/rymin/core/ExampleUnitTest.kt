@@ -1,4 +1,4 @@
-package com.rymin.service
+package com.rymin.core
 
 import org.junit.Test
 

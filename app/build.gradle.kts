@@ -95,7 +95,7 @@ dependencies {
         implementation(coroutinesAndroid)
     }
     Dependency.Module.run {
-        implementation(project(service))
+        implementation(project(core))
         implementation(project(data))
         implementation(project(commonUI))
         implementation(project(commonData))

@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.rymin.musicplayer.service"
+    namespace = "com.rymin.musicplayer.core"
     compileSdk = 34
 
     defaultConfig {
