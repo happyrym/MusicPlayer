@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Binder
@@ -20,7 +21,6 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.media.session.MediaButtonReceiver
-import com.rymin.common.config.Constants
 import com.rymin.common.config.Constants.ACTION_LOOP
 import com.rymin.common.config.Constants.ACTION_NEXT
 import com.rymin.common.config.Constants.ACTION_PAUSE
@@ -134,22 +134,28 @@ class MusicPlayerService : Service() {
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            NOTIFICATION_CHANNEL_NAME,
-            NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "Channel for music player notifications"
-        }
-        channel.setShowBadge(false)
         val manager = getSystemService(NotificationManager::class.java)
-        manager?.createNotificationChannel(channel)
+        var channel = manager?.getNotificationChannel(NOTIFICATION_CHANNEL_ID)
+        if (channel == null) {
+            channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                NOTIFICATION_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Channel for music player notifications"
+            }
+            channel.setShowBadge(false)
+            manager?.createNotificationChannel(channel)
+        }
+
     }
 
     private fun createNotification(): Notification {
-        val notificationIntent = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
+        val notificationIntent =
+            applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)
+                ?.apply {
+                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
 
         val pendingIntent = PendingIntent.getActivity(
             this,
