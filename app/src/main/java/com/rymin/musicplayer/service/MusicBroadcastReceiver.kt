@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.rymin.common.config.Constants
-import com.rymin.service.MusicPlayerService
+import com.rymin.core.service.MusicPlayerService
 
 class MusicBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {

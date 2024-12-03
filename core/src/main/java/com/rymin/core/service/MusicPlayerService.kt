@@ -1,4 +1,4 @@
-package com.rymin.service
+package com.rymin.core.service
 
 import android.app.Notification
 import android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE
@@ -8,7 +8,6 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Binder

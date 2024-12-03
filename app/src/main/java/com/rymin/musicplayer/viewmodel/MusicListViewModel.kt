@@ -12,7 +12,7 @@ import com.rymin.common.config.Constants
 import com.rymin.common.data.Album
 import com.rymin.common.data.Music
 import com.rymin.data.usecase.MusicListUseCase
-import com.rymin.service.MusicPlayerService
+import com.rymin.core.service.MusicPlayerService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
