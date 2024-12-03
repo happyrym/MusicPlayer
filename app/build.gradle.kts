@@ -96,6 +96,8 @@ dependencies {
     }
     Dependency.Module.run {
         implementation(project(service))
+        implementation(project(data))
+        implementation(project(commonUI))
         implementation(project(commonData))
         implementation(project(commonUtils))
         implementation(project(commonConfig))

@@ -35,6 +35,7 @@ import com.rymin.common.data.Album
 import com.rymin.common.data.Music
 import com.rymin.common.utils.TimeUtils
 import com.rymin.musicplayer.R
+import com.rymin.common.ui.R as resource
 import com.rymin.musicplayer.viewmodel.MusicListViewModel
 
 @Composable
@@ -86,7 +87,7 @@ fun MusicListScreen(
                 modifier = Modifier.padding(8.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_btn_back),
+                    painter = painterResource(id = resource.drawable.ic_btn_back),
                     contentDescription = "Back Button",
                     modifier = Modifier.size(24.dp) // 아이콘 크기 설정
                 )
@@ -211,7 +212,7 @@ fun AlbumItem(album: Album, onAlbumClick: (Album) -> Unit) {
             )
 
             else -> Image(
-                painter = painterResource(R.drawable.ic_btn_list),
+                painter = painterResource(resource.drawable.ic_btn_list),
                 contentDescription = album.title,
                 modifier = Modifier
                     .size(128.dp)
@@ -326,7 +327,7 @@ fun MusicPlayerControls(
             ) {
                 Image(
                     modifier = Modifier.size(24.dp),
-                    painter = painterResource(id = R.drawable.ic_btn_prev),
+                    painter = painterResource(id = resource.drawable.ic_btn_prev),
                     contentScale = ContentScale.Fit,
                     contentDescription = "Prev Button",
                 )
@@ -337,7 +338,7 @@ fun MusicPlayerControls(
             ) {
                 Image(
                     modifier = Modifier.size(24.dp),
-                    painter = painterResource(id = if (isPlaying) R.drawable.ic_btn_pause else R.drawable.ic_btn_play),
+                    painter = painterResource(id = if (isPlaying) resource.drawable.ic_btn_pause else resource.drawable.ic_btn_play),
                     contentScale = ContentScale.Fit,
                     contentDescription = "Play/Pause Button",
                 )
@@ -348,7 +349,7 @@ fun MusicPlayerControls(
             ) {
                 Image(
                     modifier = Modifier.size(24.dp),
-                    painter = painterResource(id = R.drawable.ic_btn_next),
+                    painter = painterResource(id = resource.drawable.ic_btn_next),
                     contentScale = ContentScale.Fit,
                     contentDescription = "Next Button",
                 )
@@ -367,7 +368,7 @@ fun ShuffleButton(isShuffle: Boolean, onClick: () -> Unit) {
     ) {
         Image(
             modifier = Modifier.size(24.dp),
-            painter = painterResource(id = if (!isShuffle) R.drawable.ic_btn_shuffle_disable else R.drawable.ic_btn_shuffle),
+            painter = painterResource(id = if (!isShuffle) resource.drawable.ic_btn_shuffle_disable else resource.drawable.ic_btn_shuffle),
             contentScale = ContentScale.Fit,
             contentDescription = "Loop Button",
             colorFilter = if (!isShuffle) ColorFilter.tint(Color.Gray) else null,
@@ -383,7 +384,7 @@ fun LoopButton(isLoop: Boolean, onClick: () -> Unit) {
     ) {
         Image(
             modifier = Modifier.size(24.dp),
-            painter = painterResource(id = if (!isLoop) R.drawable.ic_btn_loop_disable else R.drawable.ic_btn_loop),
+            painter = painterResource(id = if (!isLoop) resource.drawable.ic_btn_loop_disable else resource.drawable.ic_btn_loop),
             contentScale = ContentScale.Fit,
             contentDescription = "Loop Button",
             colorFilter = if (!isLoop) ColorFilter.tint(Color.Gray) else null,
@@ -453,7 +454,7 @@ fun MusicInfoBottomSheet(
                         )
 
                         else -> Image(
-                            painter = painterResource(R.drawable.ic_btn_list),
+                            painter = painterResource(resource.drawable.ic_btn_list),
                             contentDescription = "Default Album Art",
                             modifier = Modifier
                                 .size(128.dp)

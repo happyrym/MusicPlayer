@@ -11,7 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.rymin.common.config.Constants
 import com.rymin.common.data.Album
 import com.rymin.common.data.Music
-import com.rymin.musicplayer.repository.MusicRepository
+import com.rymin.data.usecase.MusicListUseCase
 import com.rymin.service.MusicPlayerService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 class MusicListViewModel(
     private val appContext: Context,
-    private val musicRepository: MusicRepository
+    private val musicListUseCase: MusicListUseCase
 ) : ViewModel() {
 
     private val _musicList = MutableStateFlow<List<Music>>(emptyList())
@@ -118,10 +118,10 @@ class MusicListViewModel(
 
     private fun fetchMusicList() {
         viewModelScope.launch {
-            musicRepository.getMusicList().collect {
+            musicListUseCase.getMusicList().collect {
                 _musicList.value = it
             }
-            musicRepository.getAlbumList().collect {
+            musicListUseCase.getAlbumList().collect {
                 _albumList.value = it
             }
         }
@@ -135,7 +135,7 @@ class MusicListViewModel(
     fun selectedAlbum(album: Album) {
         _selectedAlbum.value = album // 선택된 앨범 상태 업데이트
         viewModelScope.launch {
-            musicRepository.getMusicListByAlbum(album.id).collect {
+            musicListUseCase.getMusicListByAlbum(album.id).collect {
                 _musicList.value = it
             }
         }

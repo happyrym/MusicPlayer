@@ -1,7 +1,9 @@
-package com.rymin.musicplayer.repository
+package com.rymin.data.repository
 
 import com.rymin.common.data.Album
 import com.rymin.common.data.Music
+import com.rymin.data.repository.MusicDataSource
+import com.rymin.data.repository.MusicRepository
 import kotlinx.coroutines.flow.Flow
 
 class MusicRepositoryImpl(private val dataSource: MusicDataSource) : MusicRepository {

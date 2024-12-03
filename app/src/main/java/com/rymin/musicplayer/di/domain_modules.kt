@@ -1,8 +1,8 @@
 package com.rymin.musicplayer.di
 
-import com.rymin.musicplayer.repository.MusicDataSource
-import com.rymin.musicplayer.repository.MusicRepository
-import com.rymin.musicplayer.repository.MusicRepositoryImpl
+import com.rymin.data.repository.MusicDataSource
+import com.rymin.data.repository.MusicRepository
+import com.rymin.data.repository.MusicRepositoryImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
