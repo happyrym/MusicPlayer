@@ -28,10 +28,11 @@
         android:theme="@style/Theme.MusicPlayer"
         tools:targetApi="31" >
         <service
-            android:name="com.rymin.service.MusicPlayerService"
+            android:name="com.rymin.core.service.MusicPlayerService"
             android:foregroundServiceType="mediaPlayback" />
 
-        <receiver android:name=".service.MusicBroadcastReceiver"
+        <receiver
+            android:name="com.rymin.core.br.MusicBroadcastReceiver"
             android:exported="true"
             android:enabled="true">
             <intent-filter>
