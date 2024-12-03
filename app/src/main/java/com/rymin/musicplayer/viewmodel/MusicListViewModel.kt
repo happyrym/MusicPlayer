@@ -112,8 +112,9 @@ class MusicListViewModel(
 
     fun unbindService() {
         musicPlayerService = null
-        if(isServiceBound)
-        appContext.unbindService(serviceConnection)
+        if (isServiceBound) {
+            appContext.unbindService(serviceConnection)
+        }
     }
 
     private fun fetchMusicList() {
@@ -147,8 +148,14 @@ class MusicListViewModel(
         viewModelScope.launch {
             flow {
                 // Service 바인딩 후 지연 시간
-                delay(200)
-
+                var retryCount = 0
+                while(musicPlayerService == null && retryCount < 10){
+                    delay(200)
+                    retryCount++
+                }
+                if(retryCount >= 10){
+                    return@flow
+                }
                 // 플레이리스트 및 음악 재생
                 musicPlayerService?.setPlaylist(_musicList.value, music)
                 musicPlayerService?.playMusic(music)
@@ -200,6 +207,7 @@ class MusicListViewModel(
             delay(500) // 500ms 간격으로 업데이트
         }
     }
+
     fun seekToPosition(position: Float) {
         musicPlayerService?.seekTo(position.toInt())
         _currentPosition.value = position
