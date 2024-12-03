@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class MusicListViewModel(
     private val appContext: Context,
@@ -96,6 +97,7 @@ class MusicListViewModel(
         viewModelScope.launch {
             service.currentMusic.collect { music ->
                 _currentMusic.value = music
+                _duration.value = music?.duration?.toFloat() ?: 0f
             }
         }
         viewModelScope.launch {
@@ -160,7 +162,6 @@ class MusicListViewModel(
                 musicPlayerService?.setPlaylist(_musicList.value, music)
                 musicPlayerService?.playMusic(music)
 
-                _duration.value = musicPlayerService?.getDuration()?.toFloat() ?: 0f
                 _isPlaying.value = true
                 emitAll(updateSliderFlow())
             }.onStart {
