@@ -1,4 +1,4 @@
-package com.rymin.musicplayer.repository
+package com.rymin.data.repository
 
 import android.content.Context
 import android.provider.MediaStore
