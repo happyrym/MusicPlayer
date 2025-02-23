@@ -55,7 +55,6 @@ fun MusicListScreen(
     val albumList by viewModel.albumList.collectAsState()
     val isLoop by viewModel.isLoop.collectAsState()
     val isShuffle by viewModel.isShuffle.collectAsState()
-    val volume by viewModel.volume.collectAsState()
 
     var isBottomSheetVisible by remember { mutableStateOf(false) }
     var sliderPosition by remember { mutableFloatStateOf(currentPosition) }
@@ -110,7 +109,6 @@ fun MusicListScreen(
             Box(
                 Modifier
                     .clickable {
-                        viewModel.getVolume()
                         isBottomSheetVisible = true
                     }
                     .background(
@@ -155,8 +153,6 @@ fun MusicListScreen(
                             onShuffleClick = viewModel::changeShuffleMode,
                         )
                     },
-                    volume = volume,
-                    setVolume = { value -> viewModel.setVolume(value) },
                     onDismiss = { isBottomSheetVisible = false }
                 )
             }
@@ -429,8 +425,6 @@ fun LoopButton(isLoop: Boolean, onClick: () -> Unit) {
 @Composable
 fun MusicInfoBottomSheet(
     music: Music,
-    volume: Float,
-    setVolume: (value: Float) -> Unit,
     widget: @Composable () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -514,40 +508,8 @@ fun MusicInfoBottomSheet(
                     )
                 }
             }
-            VolumeController(volume, setVolume)
             Spacer(modifier = Modifier.height(16.dp))
             widget()
         }
-    }
-}
-
-@Composable
-fun VolumeController(
-    volume: Float,
-    setVolume: (value: Float) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = "Volume", style = MaterialTheme.typography.titleMedium)
-
-        Slider(
-            value = volume,
-            onValueChange = { newValue ->
-                setVolume(newValue)
-            },
-            valueRange = 0f..1f,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        )
-
-        Text(
-            text = "Current Volume: ${(volume * 100).toInt()}%",
-            style = MaterialTheme.typography.bodySmall
-        )
     }
 }

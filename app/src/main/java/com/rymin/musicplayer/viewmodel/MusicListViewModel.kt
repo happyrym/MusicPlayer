@@ -49,10 +49,6 @@ class MusicListViewModel(
     private val _isShuffle = MutableStateFlow(false)
     val isShuffle: StateFlow<Boolean> get() = _isShuffle
 
-    private val _volume = MutableStateFlow(0f)
-    val volume: StateFlow<Float> get() = _volume
-
-
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> get() = _isPlaying
 
@@ -217,21 +213,6 @@ class MusicListViewModel(
     override fun onCleared() {
         super.onCleared()
         musicPlayerService = null
-    }
-
-    fun getVolume() {
-        val audioManager = appContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        _volume.value = currentVolume / maxVolume.toFloat()
-    }
-
-    fun setVolume(volume: Float) {
-        val audioManager = appContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        val newVolume = (volume * maxVolume).toInt()
-        _volume.value = volume
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
     }
 
     private fun startMusicService() {
