@@ -139,9 +139,12 @@ class MusicPlayerService : Service() {
             channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Channel for music player notifications"
+                setShowBadge(false)
+                setSound(null,null)
+                vibrationPattern = null
             }
             channel.setShowBadge(false)
             manager?.createNotificationChannel(channel)
@@ -165,7 +168,9 @@ class MusicPlayerService : Service() {
 
         val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_btn_list)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setSound(null) // 소리 제거
+            .setVibrate(null)
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
                     .setMediaSession(mediaSession.sessionToken)
