@@ -101,5 +101,7 @@ dependencies {
         implementation(project(commonData))
         implementation(project(commonUtils))
         implementation(project(commonConfig))
+        implementation ("com.google.accompanist:accompanist-systemuicontroller:0.27.0")
+
     }
 }

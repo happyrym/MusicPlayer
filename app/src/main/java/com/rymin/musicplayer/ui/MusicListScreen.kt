@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.rymin.common.data.Album
 import com.rymin.common.data.Music
 import com.rymin.common.utils.TimeUtils
@@ -64,10 +65,18 @@ fun MusicListScreen(
         sliderPosition = currentPosition
     }
 
+    val systemUiController = rememberSystemUiController()
+    SideEffect {
+        systemUiController.setSystemBarsColor(
+            color = Color.White, 
+            darkIcons = true
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .systemBarsPadding()
     ) {
         Text(text = "Music Library", style = MaterialTheme.typography.titleLarge)
 

@@ -4,8 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
-import androidx.compose.ui.unit.Constraints
-import com.rymin.common.config.Constants
+import androidx.core.view.WindowCompat
 import com.rymin.musicplayer.ui.MusicListScreen
 import com.rymin.musicplayer.viewmodel.MusicListViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -16,7 +15,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             MusicListScreen(
                 viewModel = viewModel,
