@@ -32,7 +32,7 @@ class MusicPlayerApplication : Application() {
 
     private fun registerMusicBroadcastReceiver() {
         val intentFilter = IntentFilter().apply {
-            addAction(Constants.ACTION_START_FOREGROUND)
+            addAction(Constants.ACTION_PLAY)
             addAction(Constants.ACTION_STOP_FOREGROUND)
         }
         registerReceiver(musicBroadcastReceiver, intentFilter, RECEIVER_NOT_EXPORTED)

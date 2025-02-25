@@ -81,7 +81,6 @@ class MusicPlayerService : Service() {
                         ACTION_LOOP -> changeLoopMode()
                         ACTION_SHUFFLE -> changeShuffleMode()
                     }
-
                 }
 
                 override fun onPlay() {
@@ -113,18 +112,14 @@ class MusicPlayerService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Timber.d("onStartCommand ${intent?.action}")
-        MediaButtonReceiver.handleIntent(mediaSession, intent)
-        createNotificationChannel()
+//        MediaButtonReceiver.handleIntent(mediaSession, intent)
         when (intent?.action) {
-            ACTION_START_FOREGROUND -> {
-                val notification = createNotification()
-                startForeground(NOTIFICATION_ID, notification)
-            }
-
-            ACTION_STOP_FOREGROUND -> stopForegroundService()
             ACTION_PLAY -> resumeMusic()
             ACTION_PAUSE -> pauseMusic()
         }
+        createNotificationChannel()
+        val notification = createNotification()
+        startForeground(NOTIFICATION_ID, notification)
         return START_STICKY
     }
 
@@ -143,7 +138,7 @@ class MusicPlayerService : Service() {
             ).apply {
                 description = "Channel for music player notifications"
                 setShowBadge(false)
-                setSound(null,null)
+                setSound(null, null)
                 vibrationPattern = null
             }
             channel.setShowBadge(false)
@@ -223,6 +218,13 @@ class MusicPlayerService : Service() {
     }
 
     fun resumeMusic() {
+        if(mediaPlayer == null){
+            mediaPlayer = MediaPlayer().apply {
+                updateMediaMetadata(_currentMusic.value!!)
+                setDataSource(applicationContext, Uri.parse(_currentMusic.value!!.filePath))
+                prepare()
+            }
+        }
         mediaPlayer?.start()
         _isPlaying.value = true
         updateNotification()

@@ -186,12 +186,11 @@ class MusicListViewModel(
 
     fun bindToService() {
         val intent = Intent(appContext, MusicPlayerService::class.java)
-        appContext.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        appContext.bindService(intent, serviceConnection, 0)
     }
 
     fun playOrPauseMusic() {
         if (_isPlaying.value) {
-            stopMusicService()
             musicPlayerService?.pauseMusic()
         } else {
             musicPlayerService?.resumeMusic()
@@ -216,15 +215,13 @@ class MusicListViewModel(
     }
 
     private fun startMusicService() {
-        val intent = Intent(Constants.ACTION_START_FOREGROUND)
-        intent.setPackage(appContext.packageName)
-        appContext.sendBroadcast(intent)
+        val serviceIntent = Intent(appContext, MusicPlayerService::class.java)
+        appContext.startForegroundService(serviceIntent)
     }
 
     private fun stopMusicService() {
-        val intent = Intent(Constants.ACTION_STOP_FOREGROUND)
-        intent.setPackage(appContext.packageName)
-        appContext.sendBroadcast(intent)
+        val serviceIntent = Intent(appContext, MusicPlayerService::class.java)
+        appContext.stopService(serviceIntent)
     }
 
 }
